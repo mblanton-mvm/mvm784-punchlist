@@ -12,47 +12,19 @@
 <body>
 <style>
   :root {
-    --bg: #eef1f5;
-    --surface: #ffffff;
-    --surface-2: #f6f8fb;
-    --line: #dbe1ea;
-    --line-strong: #c3ccd9;
-    --ink: #16202c;
-    --ink-2: #556273;
-    --ink-soft: #5b6878;
-    --accent: #0b7cbb;
-    --accent-ink: #ffffff;
-    --good: #1f9d57;
-    --good-soft: #e5f4ec;
-    --warn: #c07d13;
-    --warn-soft: #f8efdc;
-    --flag: #c73f63;
-    --flag-soft: #fae8ee;
-    --untouched: #b7c0cd;
+    --bg: #eef1f5; --surface: #ffffff; --surface-2: #f6f8fb; --line: #dbe1ea; --line-strong: #c3ccd9;
+    --ink: #16202c; --ink-2: #556273; --ink-soft: #5b6878; --accent: #0b7cbb; --accent-ink: #ffffff;
+    --good: #1f9d57; --good-soft: #e5f4ec; --warn: #c07d13; --warn-soft: #f8efdc;
+    --flag: #c73f63; --flag-soft: #fae8ee; --untouched: #b7c0cd;
     --shadow: 0 1px 2px rgba(20,32,44,.06), 0 4px 14px rgba(20,32,44,.05);
-    --radius: 14px;
-    --tap: 58px;
+    --radius: 14px; --tap: 58px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0e1620;
-      --surface: #18232f;
-      --surface-2: #131d27;
-      --line: #263444;
-      --line-strong: #33465a;
-      --ink: #e7eef6;
-      --ink-2: #aab6c4;
-      --ink-soft: #8695a6;
-      --accent: #34b3f4;
-      --accent-ink: #06131e;
-      --good: #3fbd76;
-      --good-soft: #12312270;
-      --warn: #d͏a9a2f;
-      --warn: #d99f37;
-      --warn-soft: #33280f70;
-      --flag: #e56a89;
-      --flag-soft: #3a172270;
-      --untouched: #40505f;
+      --bg: #0e1620; --surface: #18232f; --surface-2: #131d27; --line: #263444; --line-strong: #33465a;
+      --ink: #e7eef6; --ink-2: #aab6c4; --ink-soft: #8695a6; --accent: #34b3f4; --accent-ink: #06131e;
+      --good: #3fbd76; --good-soft: #12312270; --warn: #d99f37; --warn-soft: #33280f70;
+      --flag: #e56a89; --flag-soft: #3a172270; --untouched: #40505f;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.28);
     }
   }
@@ -75,21 +47,15 @@
   body { margin: 0; }
   .app {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    padding-bottom: 96px;
-    font-size: 16px;
+    background: var(--bg); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased;
+    padding-bottom: 96px; font-size: 16px;
   }
   .mono { font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace; font-variant-numeric: tabular-nums; }
 
-  /* ---------- Header ---------- */
   header.bar {
     position: sticky; top: 0; z-index: 40;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
-    backdrop-filter: saturate(1.4) blur(10px);
-    border-bottom: 1px solid var(--line);
+    backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line);
   }
   .bar-inner { max-width: 680px; margin: 0 auto; padding: 10px 14px 12px; }
   .titlerow { display: flex; align-items: center; gap: 10px; }
@@ -127,7 +93,6 @@
   }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
-  /* ---------- Body ---------- */
   main { max-width: 680px; margin: 0 auto; padding: 12px 12px 0; }
 
   .floor { margin-bottom: 12px; }
@@ -135,12 +100,11 @@
     position: sticky; top: 0; z-index: 5;
     display: flex; align-items: center; gap: 10px; width: 100%;
     appearance: none; border: 1px solid var(--line); border-radius: 12px;
-    background: var(--surface); color: var(--ink); padding: 11px 13px; cursor: pointer;
+    background: var(--surface); color: var(--ink); padding: 14px 15px; cursor: pointer;
     box-shadow: var(--shadow); text-align: left;
   }
   .floor-head .chev { font-size: 13px; color: var(--ink-soft); transition: transform .18s ease; }
   .floor.collapsed .chev { transform: rotate(-90deg); }
-  .floor-head { padding: 14px 15px; }
   .floor-head .fname { font-weight: 700; font-size: 17px; flex: 1; }
   .floor-head .fmeta { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
   .floor-head .fbar { width: 46px; height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; }
@@ -148,7 +112,6 @@
   .floor-body { display: flex; flex-direction: column; gap: 9px; padding-top: 9px; }
   .floor.collapsed .floor-body { display: none; }
 
-  /* ---------- Room card ---------- */
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); overflow: hidden; position: relative;
@@ -173,8 +136,7 @@
   .checks { border-top: 1px solid var(--line); }
   .check {
     display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: var(--tap);
-    cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none;
-    border-top: 1px solid var(--line);
+    cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; border-top: 1px solid var(--line);
   }
   .checks > .check:first-child { border-top: 0; }
   .check input { position: absolute; opacity: 0; pointer-events: none; }
@@ -187,7 +149,6 @@
   .check .ctext { font-size: 16.5px; font-weight: 500; flex: 1; }
   .check .ctext small { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
 
-  /* TV rows: checkbox hit-area + a separate "name differs" toggle */
   .check.tv { display: flex; align-items: center; padding-right: 10px; }
   .check.tv .hit { display: flex; align-items: center; gap: 12px; flex: 1; min-height: var(--tap); cursor: pointer; }
   .check.tv .hit .ctext { font-weight: 600; }
@@ -208,14 +169,10 @@
   }
   .mismatch input::placeholder { color: var(--ink-soft); font-weight: 400; }
 
-  .empty-state { text-align: center; color: var(--ink-soft); padding: 48px 20px; font-size: 14px; }
-
-  /* ---------- Footer ---------- */
   footer.bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
-    backdrop-filter: saturate(1.4) blur(10px);
-    border-top: 1px solid var(--line);
+    backdrop-filter: saturate(1.4) blur(10px); border-top: 1px solid var(--line);
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   }
   .footer-inner { max-width: 680px; margin: 0 auto; display: flex; gap: 8px; }
@@ -227,7 +184,6 @@
   .fbtn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .fbtn:active { transform: scale(.97); }
 
-  /* ---------- Sheet / modal ---------- */
   .scrim { position: fixed; inset: 0; background: rgba(6,12,20,.5); z-index: 50; display: none; }
   .scrim.open { display: block; }
   .sheet {
@@ -272,7 +228,7 @@
         <div class="track"><i id="trackFill"></i></div>
       </div>
       <div class="tools">
-        <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room, guest, or ‘floor 12’…" autocomplete="off"></div>
+        <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room or guest…" autocomplete="off"></div>
         <div class="seg" role="group" aria-label="Filter">
           <button id="fInc" aria-pressed="true">To do</button>
           <button id="fAll" aria-pressed="false">All</button>
@@ -291,7 +247,6 @@
     </div>
   </footer>
 
-  <!-- Roster sheet -->
   <div class="scrim" id="rosterScrim"></div>
   <div class="sheet" id="rosterSheet" role="dialog" aria-modal="true" aria-labelledby="rosterTitle">
     <div class="sheet-head">
@@ -301,9 +256,8 @@
     <div class="sheet-body">
       <p class="hint">Paste today's guest names as JSON — room number to name. Only rooms you include get updated; the rest keep their current name. This replaces today's names, not the check-offs.</p>
       <textarea id="rosterInput" spellcheck="false" placeholder='{
-  "101A": "Rivera",
-  "101B": "Chen",
-  "301S": "Okafor"
+  "1001": "Rivera",
+  "1002": "Chen"
 }'></textarea>
       <div class="sheet-actions">
         <button class="fbtn" id="rosterTemplate">Fill template (all rooms)</button>
@@ -317,7 +271,6 @@
     </div>
   </div>
 
-  <!-- Export sheet -->
   <div class="scrim" id="exportScrim"></div>
   <div class="sheet" id="exportSheet" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
     <div class="sheet-head">
@@ -336,7 +289,6 @@
     </div>
   </div>
 
-  <!-- Settings sheet -->
   <div class="scrim" id="cfgScrim"></div>
   <div class="sheet" id="cfgSheet" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
     <div class="sheet-head">
@@ -345,180 +297,190 @@
     </div>
     <div class="sheet-body">
       <p class="hint">Property / job name — shows in the header and the export.</p>
-      <textarea id="cfgProp" spellcheck="false" style="min-height:44px" placeholder="e.g. MVM783 — Vacatia Oceanview"></textarea>
+      <textarea id="cfgProp" spellcheck="false" style="min-height:44px" placeholder="e.g. MVM783 — Grandview"></textarea>
       <div class="sheet-actions"><button class="fbtn primary" id="cfgSave">Save name</button></div>
       <p class="hint" style="margin-top:22px">Start a fresh day — wipes every check-off and TV note (guest names stay).</p>
       <div class="sheet-actions"><button class="fbtn danger" id="cfgReset">Reset all check-offs</button></div>
       <div class="msg" id="cfgMsg"></div>
-      <p class="hint" style="margin-top:22px;font-size:12px">Your work autosaves to this phone every 30 seconds and on every tap. Firmware target: <b class="mono">3.18</b>.</p>
+      <p class="hint" style="margin-top:22px;font-size:12px">Your work autosaves to this phone every 30 seconds and on every tap.</p>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function () {
   "use strict";
 
-  // ---- Room roster (exact list provided) ----
-  var RAW = "101A 101B 102A 102B 103A 103B 104A 104B 105A 105B 201A 201B 202A 202B 203A 203B 204A 204B 205A 205B 206A 206B 207A 207B 208A 208B 209A 209B 210A 210B 211A 211B 212A 212B 301A 301B 301S 302A 302B 303A 303B 304A 304B 305A 305B 306A 306B 307A 307B 308A 308B 309A 309B 310A 310B 311A 311B 312A 312B 401A 401B 401S 402A 402B 403A 403B 404A 404B 405A 405B 406A 406B 407A 407B 408A 408B 409A 409B 410A 410B 411A 411B 412A 412B 501A 501B 501S 502A 502B 503A 503B 504A 504B 505A 505B 506A 506B 507A 507B 508A 508B 509A 509B 510A 510B 511A 511B 512A 512B 601A 601B 601S 602A 602B 603A 603B 604A 604B 605A 605B 606A 606B 607A 607B 608A 608B 609A 609B 610A 610B 611A 611B 612A 612B 701A 701B 701S 702A 702B 703A 703B 704A 704B 705A 705B 706A 706B 707A 707B 708A 708B 709A 709B 710A 710B 711A 711B 712A 712B 801A 801B 801S 802A 802B 803A 803B 804A 804B 805A 805B 806A 806B 807A 807B 808A 808B 809A 809B 810A 810B 811A 811B 812A 812B 901A 901B 901S 902A 902B 903A 903B 904A 904B 905A 905B 906A 906B 907A 907B 908A 908B 909A 909B 910A 910B 911A 911B 912A 912B 1001A 1001B 1001S 1002A 1002B 1003A 1003B 1004A 1004B 1005A 1005B 1006A 1006B 1007A 1007B 1008A 1008B 1009A 1009B 1010A 1010B 1011A 1011B 1012A 1012B 1101A 1101B 1101S 1102A 1102B 1103A 1103B 1104A 1104B 1105A 1105B 1106A 1106B 1107A 1107B 1108A 1108B 1109A 1109B 1110A 1110B 1111A 1111B 1112A 1112B 1201A 1201B 1201S 1202A 1202B 1203A 1203B 1204A 1204B 1205A 1205B 1206A 1206B 1207A 1207B 1208A 1208B 1209A 1209B 1210A 1210B 1211A 1211B 1212A 1212B 1401A 1401B 1401S 1402A 1402B 1403A 1403B 1404A 1404B 1405A 1405B 1406A 1406B 1407A 1407B 1408A 1408B 1409A 1409B 1410A 1410B 1411A 1411B 1412A 1412B 1501A 1501B 1501S 1502A 1502B 1503A 1503B 1504A 1504B 1505A 1505B 1506A 1506B 1507A 1507B 1508A 1508B 1509A 1509B 1510A 1510B 1511A 1511B 1512A 1512B 1601A 1601B 1601S 1602A 1602B 1603A 1603B 1604A 1604B 1605A 1605B 1606A 1606B 1607A 1607B 1608A 1608B 1609A 1609B 1610A 1610B 1611A 1611B 1612A 1612B 1701A 1701B 1702A 1702B 1703A 1703B 1704A 1704B 1705A 1705B 1706A 1706B 1707A 1707B 1708A 1708B 1709A 1709B 1710A 1710B 1711A 1711B 1712A 1712B 1807A 1807B 1808A 1808B 1809A 1809B 1810A 1810B 1811A 1811B 1812A 1812B";
-  var ROOMS = RAW.trim().split(/\s+/);
-  function floorOf(r) { var n = parseInt(r.replace(/[^0-9]/g, ""), 10); return Math.floor(n / 100); }
+  var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
+  var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
+
+  /* ===CONFIG=== */
+  var CONFIG = {
+    property: "MVM784 \u2014 Berkley Las Vegas",
+    propId: "784",
+    storeKey: "mvm_punch_v1",
+    firmware: "3.18",
+    searchHint: "Find room, guest, or \u2018floor 12\u2019\u2026",
+    relabelSub: "Both boxes in this unit",
+    tvColumns: [{ key: "bed", label: "Bedroom" }, { key: "liv", label: "Living" }],
+    makeRooms: function () {
+      var RAW = "101A 101B 102A 102B 103A 103B 104A 104B 105A 105B 201A 201B 202A 202B 203A 203B 204A 204B 205A 205B 206A 206B 207A 207B 208A 208B 209A 209B 210A 210B 211A 211B 212A 212B 301A 301B 301S 302A 302B 303A 303B 304A 304B 305A 305B 306A 306B 307A 307B 308A 308B 309A 309B 310A 310B 311A 311B 312A 312B 401A 401B 401S 402A 402B 403A 403B 404A 404B 405A 405B 406A 406B 407A 407B 408A 408B 409A 409B 410A 410B 411A 411B 412A 412B 501A 501B 501S 502A 502B 503A 503B 504A 504B 505A 505B 506A 506B 507A 507B 508A 508B 509A 509B 510A 510B 511A 511B 512A 512B 601A 601B 601S 602A 602B 603A 603B 604A 604B 605A 605B 606A 606B 607A 607B 608A 608B 609A 609B 610A 610B 611A 611B 612A 612B 701A 701B 701S 702A 702B 703A 703B 704A 704B 705A 705B 706A 706B 707A 707B 708A 708B 709A 709B 710A 710B 711A 711B 712A 712B 801A 801B 801S 802A 802B 803A 803B 804A 804B 805A 805B 806A 806B 807A 807B 808A 808B 809A 809B 810A 810B 811A 811B 812A 812B 901A 901B 901S 902A 902B 903A 903B 904A 904B 905A 905B 906A 906B 907A 907B 908A 908B 909A 909B 910A 910B 911A 911B 912A 912B 1001A 1001B 1001S 1002A 1002B 1003A 1003B 1004A 1004B 1005A 1005B 1006A 1006B 1007A 1007B 1008A 1008B 1009A 1009B 1010A 1010B 1011A 1011B 1012A 1012B 1101A 1101B 1101S 1102A 1102B 1103A 1103B 1104A 1104B 1105A 1105B 1106A 1106B 1107A 1107B 1108A 1108B 1109A 1109B 1110A 1110B 1111A 1111B 1112A 1112B 1201A 1201B 1201S 1202A 1202B 1203A 1203B 1204A 1204B 1205A 1205B 1206A 1206B 1207A 1207B 1208A 1208B 1209A 1209B 1210A 1210B 1211A 1211B 1212A 1212B 1401A 1401B 1401S 1402A 1402B 1403A 1403B 1404A 1404B 1405A 1405B 1406A 1406B 1407A 1407B 1408A 1408B 1409A 1409B 1410A 1410B 1411A 1411B 1412A 1412B 1501A 1501B 1501S 1502A 1502B 1503A 1503B 1504A 1504B 1505A 1505B 1506A 1506B 1507A 1507B 1508A 1508B 1509A 1509B 1510A 1510B 1511A 1511B 1512A 1512B 1601A 1601B 1601S 1602A 1602B 1603A 1603B 1604A 1604B 1605A 1605B 1606A 1606B 1607A 1607B 1608A 1608B 1609A 1609B 1610A 1610B 1611A 1611B 1612A 1612B 1701A 1701B 1702A 1702B 1703A 1703B 1704A 1704B 1705A 1705B 1706A 1706B 1707A 1707B 1708A 1708B 1709A 1709B 1710A 1710B 1711A 1711B 1712A 1712B 1807A 1807B 1808A 1808B 1809A 1809B 1810A 1810B 1811A 1811B 1812A 1812B";
+      return RAW.trim().split(/\s+/).map(function (tok) {
+        var n = parseInt(tok.replace(/[^0-9]/g, ""), 10), floor = Math.floor(n / 100);
+        return { id: tok, roomNo: tok, sectionSort: floor, sectionLabel: "Floor " + floor,
+          tvs: [{ key: "bed", label: "Bedroom TV matches guest" }, { key: "liv", label: "Living room TV matches guest" }],
+          search: (tok + " floor " + floor).toLowerCase() };
+      });
+    }
+  };
+  /* ===/CONFIG=== */
+
+  // ---- Model ----
+  var MODEL = (function () {
+    var list = CONFIG.makeRooms();
+    var byId = {}, byKey = {}, secMap = {}, order = [];
+    list.forEach(function (rm) {
+      byId[rm.id] = rm;
+      if (byKey[rm.id] === undefined) byKey[rm.id] = rm;
+      if (byKey[rm.roomNo] === undefined) byKey[rm.roomNo] = rm;
+      if (!secMap[rm.sectionLabel]) { secMap[rm.sectionLabel] = { label: rm.sectionLabel, sort: rm.sectionSort, rooms: [] }; order.push(rm.sectionLabel); }
+      secMap[rm.sectionLabel].rooms.push(rm);
+    });
+    var sections = order.map(function (l) { return secMap[l]; }).sort(function (a, b) { return a.sort - b.sort; });
+    return { list: list, byId: byId, byKey: byKey, sections: sections };
+  })();
+  var ROOMS = MODEL.list.map(function (rm) { return rm.id; });
+  function roomDef(id) { return MODEL.byId[id]; }
 
   // ---- Storage (resilient) ----
-  var KEY = "mvm_punch_v1";
-  var mem = {};
-  var storeOK = true;
-  try { window.localStorage.setItem("__t", "1"); window.localStorage.removeItem("__t"); }
-  catch (e) { storeOK = false; }
+  var KEY = CONFIG.storeKey;
+  var mem = {}, storeOK = true;
+  try { window.localStorage.setItem("__t", "1"); window.localStorage.removeItem("__t"); } catch (e) { storeOK = false; }
   function rawGet(k) { try { return storeOK ? window.localStorage.getItem(k) : (mem[k] || null); } catch (e) { return mem[k] || null; } }
   function rawSet(k, v) { try { if (storeOK) window.localStorage.setItem(k, v); else mem[k] = v; } catch (e) { storeOK = false; mem[k] = v; } }
 
-  var DEFAULT = { prop: "MVM784 — Berkley Las Vegas", theme: "", rooms: {}, roster: {} };
+  var DEFAULT = { prop: CONFIG.property, theme: "", rooms: {}, roster: {} };
   var data;
   try { data = JSON.parse(rawGet(KEY)) || {}; } catch (e) { data = {}; }
   data = Object.assign({}, DEFAULT, data);
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
 
-  function blankRoom() { return { relabel: false, fw: false, linear: false, bedM: false, bedName: "", livM: false, livName: "", guestLocked: null }; }
-  function roomState(r) { if (!data.rooms[r]) data.rooms[r] = blankRoom(); return data.rooms[r]; }
-  function roomDone(s) {
-    var bed = s.bedM || (s.bedName || "").trim() !== "";
-    var liv = s.livM || (s.livName || "").trim() !== "";
-    return s.relabel && s.fw && s.linear && bed && liv;
-  }
-  function roomTouched(s) {
-    return s.relabel || s.fw || s.linear || s.bedM || s.livM || (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== "";
-  }
-  function roomStatus(s) { return roomDone(s) ? "done" : (roomTouched(s) ? "partial" : ""); }
-  function roomHasFlag(s) { return (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== ""; }
-  // Snapshot the check-in name onto the room the first time it is completed, so a later
-  // guest-list reload never rewrites the name a completed room was verified against.
-  function lockIfDone(r) { var s = roomState(r); if (roomDone(s) && s.guestLocked == null) s.guestLocked = rosterName(r); }
-
-  // ---- Save (debounced + 30s interval) ----
-  var saveDot = document.getElementById("saveDot");
-  var savedTxt = document.getElementById("savedTxt");
-  var saveTimer = null;
-  function persist() {
-    try { rawSet(KEY, JSON.stringify(data)); mark("saved"); }
-    catch (e) { mark("err"); }
-  }
-  function mark(state) {
-    if (state === "saving") { saveDot.className = "savedot saving"; savedTxt.textContent = "Saving…"; }
-    else if (state === "err") { saveDot.className = "savedot err"; savedTxt.textContent = storeOK ? "Save error" : "Not saved — export often"; }
-    else {
-      saveDot.className = "savedot";
-      var d = new Date();
-      var hh = d.getHours(), mm = String(d.getMinutes()).padStart(2, "0");
-      var ap = hh >= 12 ? "PM" : "AM"; hh = hh % 12 || 12;
-      savedTxt.textContent = "Saved " + hh + ":" + mm + " " + ap;
+  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: false, name: "" }; }); return { relabel: false, fw: false, linear: false, tv: t, guestLocked: null }; }
+  function roomState(id) {
+    var rm = roomDef(id);
+    if (!data.rooms[id]) data.rooms[id] = blankRoom(rm);
+    var s = data.rooms[id];
+    if (!s.tv) s.tv = {};
+    rm.tvs.forEach(function (tv) { if (!s.tv[tv.key]) s.tv[tv.key] = { match: false, name: "" }; });
+    // migrate legacy 784 shape (bedM/bedName/livM/livName) into the tv map, once
+    if (s.bedM !== undefined && !s._mig) {
+      if (s.tv.bed) s.tv.bed = { match: !!s.bedM, name: s.bedName || "" };
+      if (s.tv.liv) s.tv.liv = { match: !!s.livM, name: s.livName || "" };
+      s._mig = true;
     }
+    return s;
   }
-  function queueSave() {
-    mark("saving");
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(persist, 600);
+  function tvDone(e) { return e && (e.match || (e.name || "").trim() !== ""); }
+  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.linear)) return false; return rm.tvs.every(function (tv) { return tvDone(s.tv[tv.key]); }); }
+  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear) return true; return rm.tvs.some(function (tv) { return tvDone(s.tv[tv.key]); }); }
+  function roomStatus(id) { return roomDone(id) ? "done" : (roomTouched(id) ? "partial" : ""); }
+  function roomHasFlag(id) { var s = roomState(id), rm = roomDef(id); return rm.tvs.some(function (tv) { return (s.tv[tv.key].name || "").trim() !== ""; }); }
+  function lockIfDone(id) { var s = roomState(id); if (roomDone(id) && s.guestLocked == null) s.guestLocked = rosterName(id); }
+
+  // ---- Local save (silent offline cache; the header status is driven by sync) ----
+  var saveDot = document.getElementById("saveDot"), savedTxt = document.getElementById("savedTxt"), saveTimer = null;
+  function persist() { try { rawSet(KEY, JSON.stringify(data)); } catch (e) {} }
+  function setStatus(state) {
+    if (state === "live") { saveDot.className = "savedot"; savedTxt.textContent = "● Live"; }
+    else if (state === "sync") { saveDot.className = "savedot saving"; savedTxt.textContent = "Syncing…"; }
+    else if (state === "offline") { saveDot.className = "savedot err"; savedTxt.textContent = "Offline — saved on phone"; }
+    else { saveDot.className = "savedot err"; savedTxt.textContent = "Local only"; }
   }
-  setInterval(persist, 30000);
+  function queueSave() { if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(persist, 400); }
+  setInterval(persist, 15000);
   window.addEventListener("beforeunload", persist);
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") persist(); });
 
   // ---- Build DOM ----
   var listEl = document.getElementById("list");
-  var floors = [];
-  (function group() {
-    var byFloor = {};
-    ROOMS.forEach(function (r) { var f = floorOf(r); (byFloor[f] = byFloor[f] || []).push(r); });
-    floors = Object.keys(byFloor).map(Number).sort(function (a, b) { return a - b; }).map(function (f) { return { f: f, rooms: byFloor[f] }; });
-  })();
-
-  var roomEls = {};   // room -> { card, badge, name }
-  var floorEls = {};  // floor -> { wrap, meta, bar, body }
-
+  var roomEls = {};      // id -> { card, badge, name, lbl }
+  var sectionEls = {};   // label -> { wrap, meta, bar, rooms }
   function esc(t) { return (t || "").replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
 
-  floors.forEach(function (fl) {
-    var wrap = document.createElement("section");
-    wrap.className = "floor collapsed";
-    var head = document.createElement("button");
-    head.className = "floor-head";
-    head.innerHTML = '<span class="chev">▾</span><span class="fname">Floor ' + fl.f + '</span>' +
-      '<span class="fbar"><i></i></span><span class="fmeta"></span>';
-    var body = document.createElement("div");
-    body.className = "floor-body";
-
-    fl.rooms.forEach(function (r) {
-      var s = roomState(r);
-      var card = document.createElement("article");
-      card.className = "card collapsed";
-      card.setAttribute("data-room", r);
-      card.innerHTML =
-        '<div class="card-head">' +
-          '<span class="room-no mono">' + esc(r) + '</span>' +
-          '<span class="guest"><span class="lbl">Guest</span><span class="name"></span></span>' +
-          '<span class="badge" hidden></span>' +
-          '<span class="chev">▾</span>' +
-        '</div>' +
-        '<div class="checks">' +
-          check(r, "relabel", "Both boxes relabeled", "Bedroom + living room STBs") +
-          check(r, "fw", "Firmware verified", "Target 3.18") +
-          check(r, "linear", "Live linear content works", "Live TV channels playing") +
-          tvCheck(r, "bed", "Bedroom TV matches guest") +
-          tvCheck(r, "liv", "Living room TV matches guest") +
-        '</div>';
-      body.appendChild(card);
-      roomEls[r] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name"), lbl: card.querySelector(".guest .lbl") };
-    });
-
-    wrap.appendChild(head);
-    wrap.appendChild(body);
-    listEl.appendChild(wrap);
-    floorEls[fl.f] = { wrap: wrap, meta: head.querySelector(".fmeta"), bar: head.querySelector(".fbar > i"), body: body, rooms: fl.rooms };
-
-    head.addEventListener("click", function () {
-      var f = fl.f;
-      if (userOpen.has(f)) userOpen.delete(f); else userOpen.add(f);
-      wrap.classList.toggle("collapsed", !userOpen.has(f));
-    });
-  });
-
-  function check(r, key, label, sub) {
-    var s = roomState(r);
-    return '<label class="check" data-r="' + r + '" data-k="' + key + '">' +
+  function check(id, key, label, sub) {
+    var s = roomState(id);
+    return '<label class="check" data-r="' + esc(id) + '" data-k="' + key + '">' +
       '<input type="checkbox"' + (s[key] ? " checked" : "") + '>' +
       '<span class="box">✓</span>' +
       '<span class="ctext">' + label + '<small>' + sub + '</small></span></label>';
   }
-  function tvCheck(r, which, label) {
-    var s = roomState(r);
-    var mk = which === "bed" ? "bedM" : "livM";
-    var nk = which === "bed" ? "bedName" : "livName";
-    var showName = !s[mk] && (s[nk] || "").trim() !== "";
-    return '<div class="check tv' + (showName ? " show-name" : "") + '" data-r="' + r + '" data-k="' + mk + '" data-tv="' + which + '">' +
-        '<label class="hit"><input type="checkbox"' + (s[mk] ? " checked" : "") + '>' +
-          '<span class="box">✓</span>' +
-          '<span class="ctext">' + label + '</span></label>' +
-        '<button type="button" class="differs" data-differs="' + r + '|' + mk + '">Name differs</button>' +
+  function tvCheck(id, tv) {
+    var e = roomState(id).tv[tv.key];
+    var showName = !e.match && (e.name || "").trim() !== "";
+    return '<div class="check tv' + (showName ? " show-name" : "") + '" data-r="' + esc(id) + '" data-tv="' + tv.key + '">' +
+        '<label class="hit"><input type="checkbox"' + (e.match ? " checked" : "") + '>' +
+          '<span class="box">✓</span><span class="ctext">' + tv.label + '</span></label>' +
+        '<button type="button" class="differs">Name differs</button>' +
       '</div>' +
-      '<div class="mismatch">' +
-        '<label>Name showing on TV instead</label>' +
-        '<input type="text" data-r="' + r + '" data-name="' + nk + '" value="' + esc(s[nk]) + '" placeholder="Type the guest name shown" autocomplete="off">' +
-      '</div>';
+      '<div class="mismatch"><label>Name showing on TV instead</label>' +
+        '<input type="text" data-r="' + esc(id) + '" data-tvname="' + tv.key + '" value="' + esc(e.name) + '" placeholder="Type the guest name shown" autocomplete="off"></div>';
   }
 
-  // ---- Event delegation ----
+  MODEL.sections.forEach(function (sec) {
+    var wrap = document.createElement("section");
+    wrap.className = "floor collapsed";
+    var head = document.createElement("button");
+    head.className = "floor-head";
+    head.innerHTML = '<span class="chev">▾</span><span class="fname">' + esc(sec.label) + '</span>' +
+      '<span class="fbar"><i></i></span><span class="fmeta"></span>';
+    var body = document.createElement("div");
+    body.className = "floor-body";
+
+    sec.rooms.forEach(function (rm) {
+      var id = rm.id;
+      var card = document.createElement("article");
+      card.className = "card collapsed";
+      card.setAttribute("data-room", id);
+      var checksHtml = check(id, "relabel", "All boxes relabeled", CONFIG.relabelSub) +
+        check(id, "fw", "Firmware verified", "Target " + CONFIG.firmware) +
+        check(id, "linear", "Live linear content works", "Live TV channels playing");
+      rm.tvs.forEach(function (tv) { checksHtml += tvCheck(id, tv); });
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="room-no mono">' + esc(rm.roomNo) + '</span>' +
+          '<span class="guest"><span class="lbl">Guest</span><span class="name"></span></span>' +
+          '<span class="badge" hidden></span>' +
+          '<span class="chev">▾</span>' +
+        '</div><div class="checks">' + checksHtml + '</div>';
+      body.appendChild(card);
+      roomEls[id] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name"), lbl: card.querySelector(".guest .lbl") };
+    });
+
+    wrap.appendChild(head); wrap.appendChild(body); listEl.appendChild(wrap);
+    sectionEls[sec.label] = { wrap: wrap, meta: head.querySelector(".fmeta"), bar: head.querySelector(".fbar > i"), rooms: sec.rooms };
+    head.addEventListener("click", function () {
+      var L = sec.label;
+      if (userOpen.has(L)) userOpen.delete(L); else userOpen.add(L);
+      wrap.classList.toggle("collapsed", !userOpen.has(L));
+    });
+  });
+
+  // ---- Events ----
   listEl.addEventListener("change", function (e) {
     var box = e.target.closest("input[type=checkbox]");
-    if (box) {
-      var lab = box.closest(".check");
-      var r = lab.getAttribute("data-r"), k = lab.getAttribute("data-k");
-      roomState(r)[k] = box.checked;
-      if (lab.classList.contains("tv") && box.checked) lab.classList.remove("show-name");
-      lockIfDone(r);
-      updateRoom(r); queueSave(); refreshTotals();
-      if (roomDone(roomState(r))) setTimeout(function () { roomEls[r].card.classList.add("collapsed"); }, 220);
+    if (!box) return;
+    var lab = box.closest(".check"), id = lab.getAttribute("data-r");
+    if (lab.classList.contains("tv")) {
+      var key = lab.getAttribute("data-tv");
+      roomState(id).tv[key].match = box.checked;
+      if (box.checked) lab.classList.remove("show-name");
+    } else {
+      roomState(id)[lab.getAttribute("data-k")] = box.checked;
     }
+    lockIfDone(id); updateRoom(id); queueSave(); schedulePush(id); refreshTotals();
+    if (roomDone(id)) setTimeout(function () { roomEls[id].card.classList.add("collapsed"); }, 220);
   });
   listEl.addEventListener("click", function (e) {
     var db = e.target.closest(".differs");
@@ -526,102 +488,72 @@
       var row = db.closest(".check.tv");
       var opening = !row.classList.contains("show-name");
       row.classList.toggle("show-name", opening);
-      if (opening) { var inp = row.nextElementSibling.querySelector("input[data-name]"); if (inp) setTimeout(function () { inp.focus(); }, 30); }
+      if (opening) { var inp = row.nextElementSibling.querySelector("input[data-tvname]"); if (inp) setTimeout(function () { inp.focus(); }, 30); }
       return;
     }
     var head = e.target.closest(".card-head");
-    if (head) { head.parentNode.classList.toggle("collapsed"); }
+    if (head) head.parentNode.classList.toggle("collapsed");
   });
   listEl.addEventListener("input", function (e) {
     var t = e.target;
-    if (t.matches("input[data-name]")) {
-      var r = t.getAttribute("data-r"), nk = t.getAttribute("data-name");
-      roomState(r)[nk] = t.value;
-      lockIfDone(r);
-      updateRoom(r); queueSave(); refreshTotals();
+    if (t.matches("input[data-tvname]")) {
+      var id = t.getAttribute("data-r"), key = t.getAttribute("data-tvname");
+      roomState(id).tv[key].name = t.value;
+      lockIfDone(id); updateRoom(id); queueSave(); schedulePush(id); refreshTotals();
     }
   });
-  // Keep the room being typed in visible; only re-apply the filter once the field loses focus.
-  listEl.addEventListener("focusin", function (e) {
-    if (e.target.matches && e.target.matches("input[data-name]")) editingRoom = e.target.getAttribute("data-r");
-  });
-  listEl.addEventListener("focusout", function (e) {
-    if (e.target.matches && e.target.matches("input[data-name]")) { editingRoom = null; applyFilter(); }
-  });
+  listEl.addEventListener("focusin", function (e) { if (e.target.matches && e.target.matches("input[data-tvname]")) editingRoom = e.target.getAttribute("data-r"); });
+  listEl.addEventListener("focusout", function (e) { if (e.target.matches && e.target.matches("input[data-tvname]")) { editingRoom = null; applyFilter(); } });
 
-  // ---- Rendering updates ----
-  function rosterName(r) { return data.roster[r] || ""; }
-  // Locked (completed) rooms report their snapshotted name; everything else is live.
-  function guestName(r) { var s = data.rooms[r]; if (s && s.guestLocked != null) return s.guestLocked; return rosterName(r); }
-  function updateRoom(r) {
-    var s = roomState(r), el = roomEls[r];
-    var g = guestName(r);
-    var locked = s.guestLocked != null;
+  // ---- Rendering ----
+  function rosterName(id) { return data.roster[id] || ""; }
+  function guestName(id) { var s = data.rooms[id]; if (s && s.guestLocked != null) return s.guestLocked; return rosterName(id); }
+  function updateRoom(id) {
+    var el = roomEls[id], s = roomState(id), g = guestName(id), locked = s.guestLocked != null;
     if (el.lbl) el.lbl.textContent = locked ? "Verified" : "Guest";
     if (g) { el.name.textContent = g; el.name.classList.remove("empty"); }
     else { el.name.textContent = "no name loaded"; el.name.classList.add("empty"); }
-    var st = roomStatus(s);
+    var st = roomStatus(id);
     el.card.setAttribute("data-status", st);
-    if (st === "done" && !roomHasFlag(s)) { el.badge.hidden = false; el.badge.className = "badge done"; el.badge.textContent = "Done"; }
-    else if (roomHasFlag(s)) { el.badge.hidden = false; el.badge.className = "badge flag"; el.badge.textContent = "Name diff"; }
+    if (st === "done" && !roomHasFlag(id)) { el.badge.hidden = false; el.badge.className = "badge done"; el.badge.textContent = "Done"; }
+    else if (roomHasFlag(id)) { el.badge.hidden = false; el.badge.className = "badge flag"; el.badge.textContent = "Name diff"; }
     else { el.badge.hidden = true; }
   }
-
   function refreshTotals() {
     var done = 0, total = ROOMS.length;
-    ROOMS.forEach(function (r) { if (roomDone(roomState(r))) done++; });
+    ROOMS.forEach(function (id) { if (roomDone(id)) done++; });
     document.getElementById("doneN").textContent = done;
     document.getElementById("totalN").textContent = total;
     document.getElementById("trackFill").style.width = (total ? (done / total * 100) : 0) + "%";
-    floors.forEach(function (fl) {
-      var fd = 0; fl.rooms.forEach(function (r) { if (roomDone(roomState(r))) fd++; });
-      var fe = floorEls[fl.f];
-      fe.meta.textContent = fd + "/" + fl.rooms.length;
-      fe.bar.style.width = (fd / fl.rooms.length * 100) + "%";
+    MODEL.sections.forEach(function (sec) {
+      var fd = 0; sec.rooms.forEach(function (rm) { if (roomDone(rm.id)) fd++; });
+      var fe = sectionEls[sec.label];
+      fe.meta.textContent = fd + "/" + sec.rooms.length;
+      fe.bar.style.width = (fd / sec.rooms.length * 100) + "%";
     });
     applyFilter();
   }
 
   // ---- Filter + search ----
-  var mode = "inc";   // default: hide completed rooms (tap "All" to unhide)
-  var q = "";
-  var userOpen = new Set();   // floors the user has manually expanded (empty-query state)
-  var editingRoom = null;     // room whose mismatch-name field is focused (never hide/collapse it mid-type)
-  function applyFilter(scrollToFloor) {
-    var raw = q.trim().toLowerCase();
-    var fm = raw.match(/^(?:floor|flr|fl|f)\s*0*(\d{1,2})$/);
-    var floorQuery = fm ? parseInt(fm[1], 10) : null;
-    var query = floorQuery === null ? raw : "";
-    floors.forEach(function (fl) {
-      var isTarget = floorQuery !== null && fl.f === floorQuery;
+  var mode = "inc", q = "", userOpen = new Set(), editingRoom = null;
+  function applyFilter(scrollTo) {
+    var query = q.trim().toLowerCase(), firstMatch = null;
+    MODEL.sections.forEach(function (sec) {
       var shown = 0;
-      fl.rooms.forEach(function (r) {
-        var s = roomState(r);
-        var el = roomEls[r].card;
-        var vis = true;
-        if (mode === "inc" && roomDone(s)) vis = false;
-        if (floorQuery !== null) {
-          if (!isTarget) vis = false;
-        } else if (query) {
-          var hay = (r + " " + guestName(r)).toLowerCase();
-          if (hay.indexOf(query) === -1) vis = false;
-        }
-        if (r === editingRoom) vis = true;
+      sec.rooms.forEach(function (rm) {
+        var id = rm.id, el = roomEls[id].card, vis = true;
+        if (mode === "inc" && roomDone(id)) vis = false;
+        if (query) { var hay = (rm.search + " " + guestName(id)).toLowerCase(); if (hay.indexOf(query) === -1) vis = false; }
+        if (id === editingRoom) vis = true;
         el.style.display = vis ? "" : "none";
         if (vis) shown++;
       });
-      var fe = floorEls[fl.f];
+      var fe = sectionEls[sec.label];
       fe.wrap.style.display = shown ? "" : "none";
-      // expand rule: floor-jump → only the target; text search → any floor with hits; idle → user's choice
-      var collapse;
-      if (floorQuery !== null) collapse = !isTarget;
-      else if (query) collapse = shown === 0;
-      else collapse = !userOpen.has(fl.f);
-      fe.wrap.classList.toggle("collapsed", collapse);
+      fe.wrap.classList.toggle("collapsed", query ? shown === 0 : !userOpen.has(sec.label));
+      if (shown && query && !firstMatch) firstMatch = fe.wrap;
     });
-    if (scrollToFloor && floorQuery !== null && floorEls[floorQuery]) {
-      floorEls[floorQuery].wrap.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (scrollTo && query && firstMatch) firstMatch.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   document.getElementById("search").addEventListener("input", function (e) { q = e.target.value; applyFilter(true); });
   var fAll = document.getElementById("fAll"), fInc = document.getElementById("fInc");
@@ -631,12 +563,12 @@
   // ---- Next to do ----
   document.getElementById("nextBtn").addEventListener("click", function () {
     for (var i = 0; i < ROOMS.length; i++) {
-      var r = ROOMS[i];
-      if (!roomDone(roomState(r))) {
-        var fl = floorOf(r);
-        userOpen.add(fl);
-        floorEls[fl].wrap.classList.remove("collapsed");
-        var card = roomEls[r].card;
+      var id = ROOMS[i];
+      if (!roomDone(id)) {
+        var L = roomDef(id).sectionLabel;
+        userOpen.add(L);
+        sectionEls[L].wrap.classList.remove("collapsed");
+        var card = roomEls[id].card;
         card.classList.remove("collapsed");
         card.scrollIntoView({ behavior: "smooth", block: "center" });
         card.animate([{ boxShadow: "0 0 0 3px var(--accent)" }, { boxShadow: "var(--shadow)" }], { duration: 1100 });
@@ -647,100 +579,83 @@
   });
 
   // ---- Sheets ----
-  function openSheet(name) {
-    document.getElementById(name + "Scrim").classList.add("open");
-    document.getElementById(name + "Sheet").classList.add("open");
-  }
-  function closeSheet(name) {
-    document.getElementById(name + "Scrim").classList.remove("open");
-    document.getElementById(name + "Sheet").classList.remove("open");
-  }
+  function openSheet(n) { document.getElementById(n + "Scrim").classList.add("open"); document.getElementById(n + "Sheet").classList.add("open"); }
+  function closeSheet(n) { document.getElementById(n + "Scrim").classList.remove("open"); document.getElementById(n + "Sheet").classList.remove("open"); }
   document.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", function () { closeSheet(b.getAttribute("data-close")); }); });
-  document.querySelectorAll(".scrim").forEach(function (s) { s.addEventListener("click", function () { s.classList.remove("open"); var sh = s.id.replace("Scrim", ""); closeSheet(sh); }); });
-
+  document.querySelectorAll(".scrim").forEach(function (s) { s.addEventListener("click", function () { s.classList.remove("open"); closeSheet(s.id.replace("Scrim", "")); }); });
   document.getElementById("rosterBtn").addEventListener("click", function () { openSheet("roster"); });
   document.getElementById("exportBtn").addEventListener("click", function () { buildExport(); openSheet("export"); });
   document.getElementById("cfgBtn").addEventListener("click", function () { document.getElementById("cfgProp").value = data.prop || ""; openSheet("cfg"); });
 
-  // ---- Roster sheet actions ----
+  // ---- Roster ----
   var rosterMsg = document.getElementById("rosterMsg");
   document.getElementById("rosterApply").addEventListener("click", function () {
     var txt = document.getElementById("rosterInput").value.trim();
     if (!txt) { rmsg("Paste some JSON first.", false); return; }
-    var obj;
-    try { obj = JSON.parse(txt); } catch (e) { rmsg("That's not valid JSON — check for a missing comma or quote.", false); return; }
-    if (typeof obj !== "object" || Array.isArray(obj)) { rmsg("Expected an object like {\"101A\":\"Name\"}.", false); return; }
-    var known = 0, unknown = [];
-    Object.keys(obj).forEach(function (k) {
-      var key = k.trim();
-      if (roomEls[key]) { data.roster[key] = String(obj[k]); known++; }
-      else unknown.push(key);
-    });
-    ROOMS.forEach(updateRoom); persist();
+    var obj; try { obj = JSON.parse(txt); } catch (e) { rmsg("That's not valid JSON — check for a missing comma or quote.", false); return; }
+    if (typeof obj !== "object" || Array.isArray(obj)) { rmsg('Expected an object like {"1001":"Name"}.', false); return; }
+    var known = 0, unknown = [], changed = [];
+    Object.keys(obj).forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { data.roster[rm.id] = String(obj[k]); changed.push(rm.id); known++; } else unknown.push(String(k).trim()); });
+    ROOMS.forEach(updateRoom); persist(); pushRoster(changed);
     var m = "Loaded " + known + " name" + (known === 1 ? "" : "s") + ".";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown room" + (unknown.length === 1 ? "" : "s") + ": " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
     rmsg(m, known > 0);
   });
   document.getElementById("rosterTemplate").addEventListener("click", function () {
-    var o = {}; ROOMS.forEach(function (r) { o[r] = data.roster[r] || ""; });
+    var o = {}; MODEL.list.forEach(function (rm) { o[rm.roomNo] = data.roster[rm.id] || ""; });
     document.getElementById("rosterInput").value = JSON.stringify(o, null, 2);
     rmsg("Template filled — edit names, then Apply.", true);
   });
   document.getElementById("rosterCopy").addEventListener("click", function () {
-    var o = {}; ROOMS.forEach(function (r) { if (data.roster[r]) o[r] = data.roster[r]; });
+    var o = {}; MODEL.list.forEach(function (rm) { if (data.roster[rm.id]) o[rm.roomNo] = data.roster[rm.id]; });
     copy(JSON.stringify(o, null, 2), rosterMsg, "Current guest list copied.");
   });
   document.getElementById("rosterClear").addEventListener("click", function () {
-    if (!confirm("Clear ALL guest names? Check-offs are kept.")) return;
-    data.roster = {}; ROOMS.forEach(updateRoom); persist(); rmsg("All names cleared.", true);
+    if (!confirm("Clear ALL guest names for EVERYONE on this list? Check-offs are kept.")) return;
+    var ids = Object.keys(data.roster);
+    data.roster = {}; ROOMS.forEach(updateRoom); persist(); pushRoster(ids); rmsg("All names cleared.", true);
   });
   function rmsg(t, ok) { rosterMsg.textContent = t; rosterMsg.className = "msg " + (ok ? "ok" : "bad"); }
 
   // ---- Settings ----
   var cfgMsg = document.getElementById("cfgMsg");
-  document.getElementById("cfgSave").addEventListener("click", function () {
-    data.prop = document.getElementById("cfgProp").value.trim();
-    applyProp(); persist(); cfgMsg.textContent = "Saved."; cfgMsg.className = "msg ok";
-  });
+  document.getElementById("cfgSave").addEventListener("click", function () { data.prop = document.getElementById("cfgProp").value.trim(); applyProp(); persist(); cfgMsg.textContent = "Saved."; cfgMsg.className = "msg ok"; });
   document.getElementById("cfgReset").addEventListener("click", function () {
-    if (!confirm("Reset every check-off and TV note for a fresh day? Guest names stay.")) return;
-    data.rooms = {}; ROOMS.forEach(function (r) {
-      var el = roomEls[r].card;
+    if (!confirm("New day: reset every check-off and TV note for EVERYONE on this list (across all phones)? Guest names stay.")) return;
+    data.rooms = {}; pending.clear(); persistPending();
+    ROOMS.forEach(function (id) {
+      var el = roomEls[id].card;
       el.classList.add("collapsed");
       el.querySelectorAll("input[type=checkbox]").forEach(function (c) { c.checked = false; });
       el.querySelectorAll(".check.tv").forEach(function (c) { c.classList.remove("show-name"); });
-      el.querySelectorAll("input[data-name]").forEach(function (c) { c.value = ""; });
-      updateRoom(r);
+      el.querySelectorAll("input[data-tvname]").forEach(function (c) { c.value = ""; });
+      updateRoom(id);
     });
-    persist(); refreshTotals(); cfgMsg.textContent = "All check-offs reset."; cfgMsg.className = "msg ok";
+    persist(); refreshTotals();
+    if (sb) sb.from("punch_rooms").delete().eq("property", PROP).then(function () {}, function () {});
+    cfgMsg.textContent = "All check-offs reset for everyone."; cfgMsg.className = "msg ok";
   });
-  function applyProp() {
-    var el = document.getElementById("propName");
-    el.textContent = data.prop ? data.prop : "Tap ⚙ to name property";
-  }
+  function applyProp() { document.getElementById("propName").textContent = data.prop ? data.prop : "Tap ⚙ to name property"; }
 
   // ---- Export ----
+  function tvShort(label) { return label.replace(/ TV matches guest$/, "").replace(/ matches guest$/, ""); }
   function buildExport() {
-    var d = new Date();
-    var stamp = d.toLocaleString();
-    var done = 0, incomplete = [], flags = [];
-    ROOMS.forEach(function (r) {
-      var s = roomState(r), g = guestName(r) || "(no name)";
-      if (roomDone(s)) done++;
+    var d = new Date(), stamp = d.toLocaleString(), done = 0, incomplete = [], flags = [];
+    ROOMS.forEach(function (id) {
+      var s = roomState(id), rm = roomDef(id), g = guestName(id) || "(no name)";
+      if (roomDone(id)) done++;
       else {
         var miss = [];
         if (!s.relabel) miss.push("relabel");
         if (!s.fw) miss.push("firmware");
         if (!s.linear) miss.push("live linear");
-        if (!(s.bedM || (s.bedName || "").trim())) miss.push("bedroom TV");
-        if (!(s.livM || (s.livName || "").trim())) miss.push("living TV");
-        incomplete.push(r + " (" + g + ") — needs: " + miss.join(", "));
+        rm.tvs.forEach(function (tv) { if (!tvDone(s.tv[tv.key])) miss.push(tvShort(tv.label)); });
+        incomplete.push(rm.roomNo + " [" + rm.sectionLabel + "] (" + g + ") — needs: " + miss.join(", "));
       }
-      if ((s.bedName || "").trim()) flags.push(r + " bedroom (" + g + ") → shows \"" + s.bedName.trim() + "\"");
-      if ((s.livName || "").trim()) flags.push(r + " living (" + g + ") → shows \"" + s.livName.trim() + "\"");
+      rm.tvs.forEach(function (tv) { var nm = (s.tv[tv.key].name || "").trim(); if (nm) flags.push(rm.roomNo + " " + tvShort(tv.label) + " (" + g + ") → shows \"" + nm + "\""); });
     });
     var lines = [];
-    lines.push("PUNCH LIST — RELABEL & FW VERIFY (target 3.18)");
+    lines.push("PUNCH LIST — RELABEL & FW VERIFY (target " + CONFIG.firmware + ")");
     if (data.prop) lines.push("Property: " + data.prop);
     lines.push("Exported: " + stamp);
     lines.push("Complete: " + done + " / " + ROOMS.length + " units");
@@ -759,15 +674,19 @@
   document.getElementById("expCopyJson").addEventListener("click", function () { copy(document.getElementById("exportOut").getAttribute("data-json"), exportMsg, "Raw data copied."); });
   document.getElementById("expXlsx").addEventListener("click", function () {
     try {
-      var headers = ["Room", "Guest / check-in", "Relabeled", "Firmware 3.18", "Live linear", "Bedroom TV match", "Bedroom name shown", "Living TV match", "Living name shown", "Status"];
+      var headers = ["Room", "Section", "Guest / check-in", "Relabeled", "Firmware " + CONFIG.firmware, "Live linear"];
+      CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " match"); headers.push(tc.label + " name shown"); });
+      headers.push("Status");
       var rows = [];
-      ROOMS.forEach(function (r) {
-        var s = roomState(r);
-        rows.push([r, guestName(r) || "", yn(s.relabel), yn(s.fw), yn(s.linear), yn(s.bedM), (s.bedName || "").trim(), yn(s.livM), (s.livName || "").trim(), roomDone(s) ? "Complete" : "Incomplete"]);
+      ROOMS.forEach(function (id) {
+        var s = roomState(id), rm = roomDef(id);
+        var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", yn(s.relabel), yn(s.fw), yn(s.linear)];
+        CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(yn(e.match)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
+        row.push(roomDone(id) ? "Complete" : "Incomplete");
+        rows.push(row);
       });
       var blob = makeXlsx(headers, rows);
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
+      var url = URL.createObjectURL(blob), a = document.createElement("a");
       var d = new Date(), stamp = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
       var tag = (data.prop || "punchlist").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
       a.href = url; a.download = tag + "-" + stamp + ".xlsx"; document.body.appendChild(a); a.click();
@@ -778,7 +697,7 @@
   function yn(b) { return b ? "Yes" : "No"; }
   function pad2(n) { return String(n).padStart(2, "0"); }
 
-  // ---- Minimal .xlsx writer (no dependencies): CRC32 + stored ZIP + inline-string sheet ----
+  // ---- Minimal .xlsx writer (no dependencies) ----
   function crc32(bytes) {
     var table = crc32.t, c, n, k;
     if (!table) { table = crc32.t = []; for (n = 0; n < 256; n++) { c = n; for (k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); table[n] = c >>> 0; } }
@@ -827,21 +746,16 @@
     return new Blob(chunks.concat(cd, [eocd]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   }
 
-  // ---- Clipboard helper ----
+  // ---- Clipboard / toast ----
   function copy(text, msgEl, okText) {
     function ok() { if (msgEl) { msgEl.textContent = okText; msgEl.className = "msg ok"; } }
     function fail() { if (msgEl) { msgEl.textContent = "Couldn't copy automatically — select the text and copy manually."; msgEl.className = "msg bad"; } }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(ok, function () { legacyCopy(text) ? ok() : fail(); });
-    } else { legacyCopy(text) ? ok() : fail(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { legacyCopy(text) ? ok() : fail(); });
+    else { legacyCopy(text) ? ok() : fail(); }
   }
   function legacyCopy(text) {
-    try {
-      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select(); var okc = document.execCommand("copy"); document.body.removeChild(ta); return okc;
-    } catch (e) { return false; }
+    try { var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); var okc = document.execCommand("copy"); document.body.removeChild(ta); return okc; } catch (e) { return false; }
   }
-
   function toast(t) {
     var el = document.createElement("div");
     el.textContent = t;
@@ -853,17 +767,110 @@
   // ---- Theme ----
   var themeBtn = document.getElementById("themeBtn");
   function applyTheme() { if (data.theme) document.documentElement.setAttribute("data-theme", data.theme); else document.documentElement.removeAttribute("data-theme"); }
-  themeBtn.addEventListener("click", function () {
-    var cur = data.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    data.theme = cur === "dark" ? "light" : "dark"; applyTheme(); persist();
-  });
+  themeBtn.addEventListener("click", function () { var cur = data.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); data.theme = cur === "dark" ? "light" : "dark"; applyTheme(); persist(); });
+
+  // ---- Supabase real-time sync ----
+  var PROP = CONFIG.propId;
+  var sb = null, pending = new Set(), lastLocalEdit = {}, pushTimers = {};
+  try { (JSON.parse(rawGet(KEY + "_pending")) || []).forEach(function (id) { pending.add(id); }); } catch (e) {}
+  function persistPending() { rawSet(KEY + "_pending", JSON.stringify(Array.from(pending))); }
+
+  function schedulePush(id) {
+    lastLocalEdit[id] = Date.now();
+    if (!sb) return;
+    if (pushTimers[id]) clearTimeout(pushTimers[id]);
+    pushTimers[id] = setTimeout(function () { pushRoom(id); }, 350);
+  }
+  function pushRoom(id) {
+    if (!sb) return;
+    setStatus("sync");
+    sb.from("punch_rooms").upsert([{ property: PROP, room_id: id, data: roomState(id), updated_at: new Date().toISOString() }], { onConflict: "property,room_id" })
+      .then(function (res) {
+        if (res.error) { pending.add(id); persistPending(); setStatus("offline"); }
+        else { pending.delete(id); persistPending(); setStatus(pending.size ? "sync" : "live"); }
+      }, function () { pending.add(id); persistPending(); setStatus("offline"); });
+  }
+  function pushRoster(ids) {
+    if (!sb || !ids.length) return;
+    var rows = ids.map(function (id) { return { property: PROP, room_id: id, name: data.roster[id] || "", updated_at: new Date().toISOString() }; });
+    setStatus("sync");
+    sb.from("punch_roster").upsert(rows, { onConflict: "property,room_id" }).then(function (res) { setStatus(res.error ? "offline" : "live"); }, function () { setStatus("offline"); });
+  }
+  function flushPending() { if (!sb) return; Array.from(pending).forEach(function (id) { pushRoom(id); }); }
+
+  function recentlyMine(id) { return pending.has(id) || (Date.now() - (lastLocalEdit[id] || 0) < 3000); }
+  function applyServerRoom(id, d) {
+    if (recentlyMine(id)) return;
+    data.rooms[id] = d; queueSave();
+    if (roomEls[id]) { syncRoomDom(id); updateRoom(id); }
+    refreshTotals();
+  }
+  function applyServerDelete(id) {
+    if (recentlyMine(id)) return;
+    delete data.rooms[id]; queueSave();
+    if (roomEls[id]) { syncRoomDom(id); updateRoom(id); }
+    refreshTotals();
+  }
+  function applyServerRoster(id, name) {
+    data.roster[id] = name; queueSave();
+    if (roomEls[id]) updateRoom(id);
+    refreshTotals();
+  }
+  // Re-render a room's checkbox/name DOM from its (possibly server-updated) state
+  function syncRoomDom(id) {
+    var el = roomEls[id].card, s = roomState(id), rm = roomDef(id);
+    var byk = {};
+    el.querySelectorAll(".check[data-k]").forEach(function (c) { byk[c.getAttribute("data-k")] = c.querySelector("input"); });
+    ["relabel", "fw", "linear"].forEach(function (k) { if (byk[k]) byk[k].checked = !!s[k]; });
+    el.querySelectorAll(".check.tv").forEach(function (row) {
+      var key = row.getAttribute("data-tv"), e = s.tv[key] || { match: false, name: "" };
+      var cb = row.querySelector("input"); if (cb) cb.checked = !!e.match;
+      var mm = row.nextElementSibling, inp = mm && mm.querySelector("input[data-tvname]");
+      if (inp && document.activeElement !== inp) inp.value = e.name || "";
+      row.classList.toggle("show-name", !e.match && (e.name || "").trim() !== "");
+    });
+    if (roomDone(id)) el.classList.add("collapsed");
+  }
+
+  function initSync() {
+    if (!window.supabase || !window.supabase.createClient) { setStatus("local"); return; }
+    try { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch (e) { setStatus("local"); return; }
+    setStatus("sync");
+    sb.from("punch_rooms").select("room_id,data").eq("property", PROP).then(function (res) {
+      var serverIds = {};
+      if (!res.error && res.data) res.data.forEach(function (row) { serverIds[row.room_id] = 1; if (!pending.has(row.room_id)) data.rooms[row.room_id] = row.data; });
+      // seed the server with any local-only work (e.g. what a crew already did before this switch)
+      Object.keys(data.rooms).forEach(function (id) { if (!serverIds[id] && roomState(id) && (roomDone(id) || true)) pending.add(id); });
+      persistPending(); queueSave();
+      ROOMS.forEach(function (id) { if (roomEls[id]) { syncRoomDom(id); updateRoom(id); } });
+      refreshTotals(); flushPending();
+    }, function () { setStatus("offline"); });
+    sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
+      if (!res.error && res.data) { res.data.forEach(function (row) { data.roster[row.room_id] = row.name; }); queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
+    });
+    sb.channel("punch-" + PROP)
+      .on("postgres_changes", { event: "*", schema: "public", table: "punch_rooms", filter: "property=eq." + PROP }, function (p) {
+        if (p.eventType === "DELETE") { if (p.old && p.old.room_id != null) applyServerDelete(p.old.room_id); }
+        else if (p.new && p.new.room_id != null) applyServerRoom(p.new.room_id, p.new.data);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "punch_roster", filter: "property=eq." + PROP }, function (p) {
+        if (p.new && p.new.room_id != null) applyServerRoster(p.new.room_id, p.new.name);
+      })
+      .subscribe(function (status) {
+        if (status === "SUBSCRIBED") { setStatus(pending.size ? "sync" : "live"); flushPending(); }
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setStatus("offline");
+      });
+    setInterval(flushPending, 15000);
+    window.addEventListener("online", flushPending);
+  }
 
   // ---- Init ----
-  applyTheme();
-  applyProp();
+  document.getElementById("search").placeholder = CONFIG.searchHint;
+  applyTheme(); applyProp();
   ROOMS.forEach(updateRoom);
   refreshTotals();
-  mark("saved");
+  setStatus("local");
+  initSync();
 })();
 </script>
 
