@@ -433,6 +433,20 @@
   }
   function roomStatus(id) { return roomDone(id) ? (issuesOf(id).length ? "issue" : "done") : (roomTouched(id) ? "partial" : ""); }
   function lockIfDone(id) { var s = roomState(id); if (roomDone(id) && s.guestLocked == null) s.guestLocked = rosterName(id); }
+  // Resolve a list of room tokens (exact unit code, exact room#, or a plain room# → all its units) into a set of room ids.
+  function flagSetFromTokens(tokens) {
+    var set = {}, unknown = [];
+    (tokens || []).forEach(function (k) {
+      var t = String(k).trim(); if (!t) return;
+      var hit = false, hasLetter = /[A-Za-z]/.test(t), dt = t.replace(/[^0-9]/g, "");
+      MODEL.list.forEach(function (rm) {
+        if (rm.id === t || rm.roomNo === t) { set[rm.id] = true; hit = true; }
+        else if (!hasLetter && dt && rm.roomNo.replace(/[^0-9]/g, "") === dt) { set[rm.id] = true; hit = true; }
+      });
+      if (!hit) unknown.push(t);
+    });
+    return { set: set, unknown: unknown };
+  }
 
   // ---- Local save (silent offline cache; the header status is driven by sync) ----
   var saveDot = document.getElementById("saveDot"), savedTxt = document.getElementById("savedTxt"), saveTimer = null;
@@ -721,18 +735,9 @@
     if (Array.isArray(obj)) keys = obj.map(String);
     else if (obj && typeof obj === "object") keys = Object.keys(obj).filter(function (k) { return obj[k]; });
     else { fwMsg.textContent = "Expected a list or object of room numbers."; fwMsg.className = "msg bad"; return; }
-    var set = {}, unknown = [];
-    keys.forEach(function (k) {
-      var t = String(k).trim(); if (!t) return;
-      var hit = false, hasLetter = /[A-Za-z]/.test(t), dt = t.replace(/[^0-9]/g, "");
-      MODEL.list.forEach(function (rm) {
-        if (rm.id === t || rm.roomNo === t) { set[rm.id] = true; hit = true; }
-        else if (!hasLetter && dt && rm.roomNo.replace(/[^0-9]/g, "") === dt) { set[rm.id] = true; hit = true; } // plain room # → all its units
-      });
-      if (!hit) unknown.push(t);
-    });
+    var res = flagSetFromTokens(keys), set = res.set, unknown = res.unknown;
     var known = Object.keys(set).length;
-    data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(Object.keys(set));
+    data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(keys);
     var m = "Flagged " + known + " room" + (known === 1 ? "" : "s") + " for M2 FW update.";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown: " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
     fwMsg.textContent = m; fwMsg.className = "msg " + (known ? "ok" : "bad");
@@ -985,7 +990,7 @@
     if (!sb) return;
     sb.from("punch_fw").select("room_id").eq("property", PROP).then(function (res) {
       if (res.error || !res.data) return;
-      var set = {}; res.data.forEach(function (r) { set[r.room_id] = true; });
+      var set = flagSetFromTokens(res.data.map(function (r) { return r.room_id; })).set;
       if (JSON.stringify(set) === JSON.stringify(data.fw)) return;
       data.fw = set; queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals();
     }, function () {});
