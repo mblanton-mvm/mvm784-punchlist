@@ -134,6 +134,7 @@
   .badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 4px 8px; border-radius: 999px; flex: none; }
   .badge.done { background: var(--good-soft); color: var(--good); }
   .badge.flag { background: var(--flag-soft); color: var(--flag); }
+  .fwchip { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 4px 8px; border-radius: 999px; flex: none; background: var(--warn-soft); color: var(--warn); white-space: nowrap; }
 
   .checks { border-top: 1px solid var(--line); }
   .check {
@@ -250,6 +251,7 @@
           <option value="nofw">⚠ FW not verified</option>
           <option value="nolinear">⚠ Linear not working</option>
           <option value="notv">⚠ TV mismatch</option>
+          <option value="fwneeded">🔧 M2 FW update needed</option>
           <option value="comment">💬 Has comment</option>
         </select>
       </div>
@@ -318,6 +320,13 @@
       <p class="hint">Property / job name — shows in the header and the export.</p>
       <textarea id="cfgProp" spellcheck="false" style="min-height:44px" placeholder="e.g. MVM783 — Grandview"></textarea>
       <div class="sheet-actions"><button class="fbtn primary" id="cfgSave">Save name</button></div>
+      <p class="hint" style="margin-top:22px">M2 FW-update targets — paste the room numbers whose M2 firmware is behind (from RMMS). Rooms get a <b>⬆ M2 FW</b> flag; filter to <b>🔧 M2 FW update needed</b>. Accepts <code>["101","305"]</code> or <code>{"101":true}</code>. Replaces the current target list.</p>
+      <textarea id="fwInput" spellcheck="false" style="min-height:80px" placeholder='["101", "305", "412"]'></textarea>
+      <div class="sheet-actions">
+        <button class="fbtn primary" id="fwApply">Apply FW targets</button>
+        <button class="fbtn danger" id="fwClear">Clear FW targets</button>
+      </div>
+      <div class="msg" id="fwMsg"></div>
       <p class="hint" style="margin-top:22px">Start a fresh day — wipes every check-off and TV note (guest names stay).</p>
       <div class="sheet-actions"><button class="fbtn danger" id="cfgReset">Reset all check-offs</button></div>
       <div class="msg" id="cfgMsg"></div>
@@ -379,12 +388,13 @@
   function rawGet(k) { try { return storeOK ? window.localStorage.getItem(k) : (mem[k] || null); } catch (e) { return mem[k] || null; } }
   function rawSet(k, v) { try { if (storeOK) window.localStorage.setItem(k, v); else mem[k] = v; } catch (e) { storeOK = false; mem[k] = v; } }
 
-  var DEFAULT = { prop: CONFIG.property, theme: "", rooms: {}, roster: {} };
+  var DEFAULT = { prop: CONFIG.property, theme: "", rooms: {}, roster: {}, fw: {} };
   var data;
   try { data = JSON.parse(rawGet(KEY)) || {}; } catch (e) { data = {}; }
   data = Object.assign({}, DEFAULT, data);
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
+  data.fw = data.fw || {};   // room_id -> true : "M2 FW update needed" targets (imported from RMMS)
 
   // Each question is a Yes/No toggle: value "" (unanswered) | "yes" | "no". A room is DONE when every
   // question has an answer (Yes OR No). A "No" answer flags an issue (surfaced in filters + badge + export).
@@ -497,11 +507,12 @@
         '<div class="card-head">' +
           '<span class="room-no mono">' + esc(rm.roomNo) + '</span>' +
           '<span class="guest"><span class="lbl">Guest</span><span class="name"></span></span>' +
+          '<span class="fwchip" hidden>⬆ M2 FW</span>' +
           '<span class="badge" hidden></span>' +
           '<span class="chev">▾</span>' +
         '</div><div class="checks">' + checksHtml + '</div>';
       body.appendChild(card);
-      roomEls[id] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name"), lbl: card.querySelector(".guest .lbl") };
+      roomEls[id] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name"), lbl: card.querySelector(".guest .lbl"), fwchip: card.querySelector(".fwchip") };
     });
 
     wrap.appendChild(head); wrap.appendChild(body); listEl.appendChild(wrap);
@@ -562,6 +573,7 @@
   function guestName(id) { var s = data.rooms[id]; if (s && s.guestLocked != null) return s.guestLocked; return rosterName(id); }
   function updateRoom(id) {
     var el = roomEls[id], s = roomState(id), g = guestName(id), locked = s.guestLocked != null;
+    if (el.fwchip) el.fwchip.hidden = !data.fw[id];
     if (el.lbl) el.lbl.textContent = locked ? "Verified" : "Guest";
     if (g) { el.name.textContent = g; el.name.classList.remove("empty"); }
     else { el.name.textContent = "no name loaded"; el.name.classList.add("empty"); }
@@ -599,6 +611,7 @@
       case "nofw": return roomDone(id) && s.fw === "no";
       case "nolinear": return roomDone(id) && s.linear === "no";
       case "notv": return roomDone(id) && rm.tvs.some(function (tv) { return s.tv[tv.key].match === "no"; });
+      case "fwneeded": return !!data.fw[id];
       case "comment": return (s.commentText || "").trim() !== "";
       default: return !roomDone(id); // "inc" = To do (not completed)
     }
@@ -698,6 +711,29 @@
   });
   function applyProp() { document.getElementById("propName").textContent = data.prop ? data.prop : "Tap ⚙ to name property"; }
 
+  // ---- M2 FW-update target import ----
+  var fwMsg = document.getElementById("fwMsg");
+  document.getElementById("fwApply").addEventListener("click", function () {
+    var txt = document.getElementById("fwInput").value.trim();
+    if (!txt) { fwMsg.textContent = "Paste room numbers first."; fwMsg.className = "msg bad"; return; }
+    var obj; try { obj = JSON.parse(txt); } catch (e) { fwMsg.textContent = 'Not valid JSON — use ["101","305"] or {"101":true}.'; fwMsg.className = "msg bad"; return; }
+    var keys;
+    if (Array.isArray(obj)) keys = obj.map(String);
+    else if (obj && typeof obj === "object") keys = Object.keys(obj).filter(function (k) { return obj[k]; });
+    else { fwMsg.textContent = "Expected a list or object of room numbers."; fwMsg.className = "msg bad"; return; }
+    var set = {}, known = 0, unknown = [];
+    keys.forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { set[rm.id] = true; known++; } else unknown.push(String(k).trim()); });
+    data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(Object.keys(set));
+    var m = "Flagged " + known + " room" + (known === 1 ? "" : "s") + " for M2 FW update.";
+    if (unknown.length) m += " Ignored " + unknown.length + " unknown: " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
+    fwMsg.textContent = m; fwMsg.className = "msg " + (known ? "ok" : "bad");
+  });
+  document.getElementById("fwClear").addEventListener("click", function () {
+    if (!confirm("Clear ALL M2 FW-update flags for EVERYONE on this list?")) return;
+    data.fw = {}; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets([]);
+    fwMsg.textContent = "FW targets cleared."; fwMsg.className = "msg ok";
+  });
+
   // ---- Export ----
   function tvShort(label) { return label.replace(/ TV matches guest$/, "").replace(/ matches guest$/, ""); }
   function ynStr(v) { return v === "yes" ? "Yes" : v === "no" ? "No" : ""; }
@@ -749,12 +785,13 @@
     try {
       var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Live linear?"];
       CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " match"); headers.push(tc.label + " name shown"); });
-      headers.push("Comment"); headers.push("Issues"); headers.push("Status");
+      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status");
       var rows = [];
       ROOMS.forEach(function (id) {
         var s = roomState(id), rm = roomDef(id);
         var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.linear)];
         CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(ynStr(e.match)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
+        row.push(data.fw[id] ? "Yes" : "");
         row.push((s.commentText || "").trim());
         row.push(issueText(id));
         row.push(roomDone(id) ? (issuesOf(id).length ? "Complete — issues" : "Complete") : "Incomplete");
@@ -932,6 +969,25 @@
       res.data.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
       if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
     }, function () {});
+    pullFw();
+  }
+
+  function pullFw() {
+    if (!sb) return;
+    sb.from("punch_fw").select("room_id").eq("property", PROP).then(function (res) {
+      if (res.error || !res.data) return;
+      var set = {}; res.data.forEach(function (r) { set[r.room_id] = true; });
+      if (JSON.stringify(set) === JSON.stringify(data.fw)) return;
+      data.fw = set; queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals();
+    }, function () {});
+  }
+  function pushFwTargets(ids) {
+    if (!sb) return;
+    setStatus("sync");
+    sb.from("punch_fw").delete().eq("property", PROP).then(function () {
+      if (!ids.length) { setStatus("live"); return; }
+      sb.from("punch_fw").insert(ids.map(function (id) { return { property: PROP, room_id: id }; })).then(function (res) { setStatus(res.error ? "offline" : "live"); }, function () { setStatus("offline"); });
+    }, function () { setStatus("offline"); });
   }
 
   function initSync() {
@@ -950,6 +1006,7 @@
     sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
       if (!res.error && res.data) { res.data.forEach(function (row) { data.roster[row.room_id] = row.name; }); queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
     });
+    pullFw();
     sb.channel("punch-" + PROP)
       .on("postgres_changes", { event: "*", schema: "public", table: "punch_rooms", filter: "property=eq." + PROP }, function (p) {
         if (p.eventType === "DELETE") { if (p.old && p.old.room_id != null) applyServerDelete(p.old.room_id); }
@@ -958,6 +1015,7 @@
       .on("postgres_changes", { event: "*", schema: "public", table: "punch_roster", filter: "property=eq." + PROP }, function (p) {
         if (p.new && p.new.room_id != null) applyServerRoster(p.new.room_id, p.new.name);
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "punch_fw", filter: "property=eq." + PROP }, function () { pullFw(); })
       .subscribe(function (status) {
         if (status === "SUBSCRIBED") { setStatus(pending.size ? "sync" : "live"); flushPending(); resync(); }
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setStatus("offline");
