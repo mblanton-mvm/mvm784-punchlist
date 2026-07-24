@@ -169,6 +169,27 @@
   }
   .mismatch input::placeholder { color: var(--ink-soft); font-weight: 400; }
 
+  /* Comment Yes/No + text */
+  .check.comment { display: flex; align-items: center; padding-right: 10px; }
+  .check.comment .ctext { flex: 1; font-weight: 600; }
+  .yn { display: flex; gap: 6px; flex: none; }
+  .yn-btn {
+    appearance: none; border: 1px solid var(--line-strong); background: var(--surface-2);
+    color: var(--ink-2); font-size: 14px; font-weight: 700; height: 36px; min-width: 54px;
+    padding: 0 14px; border-radius: 9px; cursor: pointer;
+  }
+  .yn-btn[data-cval="no"][aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff; }
+  .yn-btn[data-cval="yes"][aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .comment-field { padding: 2px 14px 12px 14px; display: none; }
+  .check.comment.show-c + .comment-field { display: block; }
+  .comment-field label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+  .comment-field textarea {
+    width: 100%; min-height: 62px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--surface-2); color: var(--ink); padding: 10px 12px; font-size: 16px;
+    font-family: inherit; line-height: 1.4; resize: vertical;
+  }
+  .comment-field textarea::placeholder { color: var(--ink-soft); }
+
   footer.bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
@@ -367,7 +388,7 @@
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
 
-  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: false, name: "" }; }); return { relabel: false, fw: false, linear: false, tv: t, guestLocked: null }; }
+  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: false, name: "" }; }); return { relabel: false, fw: false, linear: false, tv: t, commentChoice: "", commentText: "", guestLocked: null }; }
   function roomState(id) {
     var rm = roomDef(id);
     if (!data.rooms[id]) data.rooms[id] = blankRoom(rm);
@@ -383,8 +404,9 @@
     return s;
   }
   function tvDone(e) { return e && (e.match || (e.name || "").trim() !== ""); }
-  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.linear)) return false; return rm.tvs.every(function (tv) { return tvDone(s.tv[tv.key]); }); }
-  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear) return true; return rm.tvs.some(function (tv) { return tvDone(s.tv[tv.key]); }); }
+  function commentAnswered(s) { return s.commentChoice === "no" || (s.commentChoice === "yes" && (s.commentText || "").trim() !== ""); }
+  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.linear)) return false; if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvDone(s.tv[tv.key]); }); }
+  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { return tvDone(s.tv[tv.key]); }); }
   function roomStatus(id) { return roomDone(id) ? "done" : (roomTouched(id) ? "partial" : ""); }
   function roomHasFlag(id) { var s = roomState(id), rm = roomDef(id); return rm.tvs.some(function (tv) { return (s.tv[tv.key].name || "").trim() !== ""; }); }
   function lockIfDone(id) { var s = roomState(id); if (roomDone(id) && s.guestLocked == null) s.guestLocked = rosterName(id); }
@@ -427,6 +449,18 @@
       '<div class="mismatch"><label>Name showing on TV instead</label>' +
         '<input type="text" data-r="' + esc(id) + '" data-tvname="' + tv.key + '" value="' + esc(e.name) + '" placeholder="Type the guest name shown" autocomplete="off"></div>';
   }
+  function commentRow(id) {
+    var s = roomState(id), show = s.commentChoice === "yes";
+    return '<div class="check comment' + (show ? " show-c" : "") + '" data-r="' + esc(id) + '">' +
+        '<span class="ctext">Any comments?</span>' +
+        '<span class="yn">' +
+          '<button type="button" class="yn-btn" data-cval="no" aria-pressed="' + (s.commentChoice === "no") + '">No</button>' +
+          '<button type="button" class="yn-btn" data-cval="yes" aria-pressed="' + (s.commentChoice === "yes") + '">Yes</button>' +
+        '</span>' +
+      '</div>' +
+      '<div class="comment-field"><label>Comment</label>' +
+        '<textarea data-comment="' + esc(id) + '" placeholder="Type the comment">' + esc(s.commentText) + '</textarea></div>';
+  }
 
   MODEL.sections.forEach(function (sec) {
     var wrap = document.createElement("section");
@@ -447,6 +481,7 @@
         check(id, "fw", "Firmware verified", "Target " + CONFIG.firmware) +
         check(id, "linear", "Live linear content works", "Live TV channels playing");
       rm.tvs.forEach(function (tv) { checksHtml += tvCheck(id, tv); });
+      checksHtml += commentRow(id);
       card.innerHTML =
         '<div class="card-head">' +
           '<span class="room-no mono">' + esc(rm.roomNo) + '</span>' +
@@ -483,6 +518,19 @@
     if (roomDone(id)) setTimeout(function () { roomEls[id].card.classList.add("collapsed"); }, 220);
   });
   listEl.addEventListener("click", function (e) {
+    var yn = e.target.closest(".yn-btn");
+    if (yn) {
+      var row = yn.closest(".check.comment"), id = row.getAttribute("data-r"), val = yn.getAttribute("data-cval");
+      var s = roomState(id);
+      s.commentChoice = val;
+      if (val === "no") { s.commentText = ""; var ta0 = row.nextElementSibling.querySelector("textarea"); if (ta0) ta0.value = ""; }
+      row.querySelectorAll(".yn-btn").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-cval") === val); });
+      row.classList.toggle("show-c", val === "yes");
+      if (val === "yes") { var ta = row.nextElementSibling.querySelector("textarea"); if (ta) setTimeout(function () { ta.focus(); }, 30); }
+      lockIfDone(id); updateRoom(id); queueSave(); schedulePush(id); refreshTotals();
+      if (roomDone(id)) setTimeout(function () { roomEls[id].card.classList.add("collapsed"); }, 220);
+      return;
+    }
     var db = e.target.closest(".differs");
     if (db) {
       var row = db.closest(".check.tv");
@@ -500,10 +548,14 @@
       var id = t.getAttribute("data-r"), key = t.getAttribute("data-tvname");
       roomState(id).tv[key].name = t.value;
       lockIfDone(id); updateRoom(id); queueSave(); schedulePush(id); refreshTotals();
+    } else if (t.matches("textarea[data-comment]")) {
+      var cid = t.getAttribute("data-comment");
+      roomState(cid).commentText = t.value;
+      lockIfDone(cid); updateRoom(cid); queueSave(); schedulePush(cid); refreshTotals();
     }
   });
-  listEl.addEventListener("focusin", function (e) { if (e.target.matches && e.target.matches("input[data-tvname]")) editingRoom = e.target.getAttribute("data-r"); });
-  listEl.addEventListener("focusout", function (e) { if (e.target.matches && e.target.matches("input[data-tvname]")) { editingRoom = null; applyFilter(); } });
+  listEl.addEventListener("focusin", function (e) { if (e.target.matches && e.target.matches("input[data-tvname], textarea[data-comment]")) editingRoom = e.target.getAttribute("data-r") || e.target.getAttribute("data-comment"); });
+  listEl.addEventListener("focusout", function (e) { if (e.target.matches && e.target.matches("input[data-tvname], textarea[data-comment]")) { editingRoom = null; applyFilter(); } });
 
   // ---- Rendering ----
   function rosterName(id) { return data.roster[id] || ""; }
@@ -624,12 +676,8 @@
     if (!confirm("New day: reset every check-off and TV note for EVERYONE on this list (across all phones)? Guest names stay.")) return;
     data.rooms = {}; pending.clear(); persistPending();
     ROOMS.forEach(function (id) {
-      var el = roomEls[id].card;
-      el.classList.add("collapsed");
-      el.querySelectorAll("input[type=checkbox]").forEach(function (c) { c.checked = false; });
-      el.querySelectorAll(".check.tv").forEach(function (c) { c.classList.remove("show-name"); });
-      el.querySelectorAll("input[data-tvname]").forEach(function (c) { c.value = ""; });
-      updateRoom(id);
+      roomEls[id].card.classList.add("collapsed");
+      syncRoomDom(id); updateRoom(id);
     });
     persist(); refreshTotals();
     if (sb) sb.from("punch_rooms").delete().eq("property", PROP).then(function () {}, function () {});
@@ -640,7 +688,7 @@
   // ---- Export ----
   function tvShort(label) { return label.replace(/ TV matches guest$/, "").replace(/ matches guest$/, ""); }
   function buildExport() {
-    var d = new Date(), stamp = d.toLocaleString(), done = 0, incomplete = [], flags = [];
+    var d = new Date(), stamp = d.toLocaleString(), done = 0, incomplete = [], flags = [], comments = [];
     ROOMS.forEach(function (id) {
       var s = roomState(id), rm = roomDef(id), g = guestName(id) || "(no name)";
       if (roomDone(id)) done++;
@@ -650,9 +698,11 @@
         if (!s.fw) miss.push("firmware");
         if (!s.linear) miss.push("live linear");
         rm.tvs.forEach(function (tv) { if (!tvDone(s.tv[tv.key])) miss.push(tvShort(tv.label)); });
+        if (!commentAnswered(s)) miss.push("comment Y/N");
         incomplete.push(rm.roomNo + " [" + rm.sectionLabel + "] (" + g + ") — needs: " + miss.join(", "));
       }
       rm.tvs.forEach(function (tv) { var nm = (s.tv[tv.key].name || "").trim(); if (nm) flags.push(rm.roomNo + " " + tvShort(tv.label) + " (" + g + ") → shows \"" + nm + "\""); });
+      if ((s.commentText || "").trim()) comments.push(rm.roomNo + " [" + rm.sectionLabel + "] (" + g + "): " + s.commentText.trim());
     });
     var lines = [];
     lines.push("PUNCH LIST — RELABEL & FW VERIFY (target " + CONFIG.firmware + ")");
@@ -662,6 +712,9 @@
     lines.push("");
     lines.push("── TV NAME MISMATCHES (" + flags.length + ") ──");
     lines.push(flags.length ? flags.join("\n") : "None.");
+    lines.push("");
+    lines.push("── COMMENTS (" + comments.length + ") ──");
+    lines.push(comments.length ? comments.join("\n") : "None.");
     lines.push("");
     lines.push("── STILL TO DO (" + incomplete.length + ") ──");
     lines.push(incomplete.length ? incomplete.join("\n") : "None — all units complete.");
@@ -676,12 +729,13 @@
     try {
       var headers = ["Room", "Section", "Guest / check-in", "Relabeled", "Firmware " + CONFIG.firmware, "Live linear"];
       CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " match"); headers.push(tc.label + " name shown"); });
-      headers.push("Status");
+      headers.push("Comment"); headers.push("Status");
       var rows = [];
       ROOMS.forEach(function (id) {
         var s = roomState(id), rm = roomDef(id);
         var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", yn(s.relabel), yn(s.fw), yn(s.linear)];
         CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(yn(e.match)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
+        row.push((s.commentText || "").trim());
         row.push(roomDone(id) ? "Complete" : "Incomplete");
         rows.push(row);
       });
@@ -829,6 +883,13 @@
       if (inp && document.activeElement !== inp) inp.value = e.name || "";
       row.classList.toggle("show-name", !e.match && (e.name || "").trim() !== "");
     });
+    var crow = el.querySelector(".check.comment");
+    if (crow) {
+      crow.querySelectorAll(".yn-btn").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-cval") === s.commentChoice); });
+      crow.classList.toggle("show-c", s.commentChoice === "yes");
+      var ta = crow.nextElementSibling.querySelector("textarea");
+      if (ta && document.activeElement !== ta) ta.value = s.commentText || "";
+    }
     if (roomDone(id)) el.classList.add("collapsed");
   }
 
