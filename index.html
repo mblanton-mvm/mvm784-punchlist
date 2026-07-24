@@ -274,8 +274,8 @@
       <div class="tools">
         <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room, guest, or ‘floor 12’…" autocomplete="off"></div>
         <div class="seg" role="group" aria-label="Filter">
-          <button id="fAll" aria-pressed="true">All</button>
-          <button id="fInc" aria-pressed="false">To do</button>
+          <button id="fInc" aria-pressed="true">To do</button>
+          <button id="fAll" aria-pressed="false">All</button>
         </div>
       </div>
     </div>
@@ -380,7 +380,7 @@
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
 
-  function blankRoom() { return { relabel: false, fw: false, bedM: false, bedName: "", livM: false, livName: "" }; }
+  function blankRoom() { return { relabel: false, fw: false, bedM: false, bedName: "", livM: false, livName: "", guestLocked: null }; }
   function roomState(r) { if (!data.rooms[r]) data.rooms[r] = blankRoom(); return data.rooms[r]; }
   function roomDone(s) {
     var bed = s.bedM || (s.bedName || "").trim() !== "";
@@ -392,6 +392,9 @@
   }
   function roomStatus(s) { return roomDone(s) ? "done" : (roomTouched(s) ? "partial" : ""); }
   function roomHasFlag(s) { return (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== ""; }
+  // Snapshot the check-in name onto the room the first time it is completed, so a later
+  // guest-list reload never rewrites the name a completed room was verified against.
+  function lockIfDone(r) { var s = roomState(r); if (roomDone(s) && s.guestLocked == null) s.guestLocked = rosterName(r); }
 
   // ---- Save (debounced + 30s interval) ----
   var saveDot = document.getElementById("saveDot");
@@ -464,7 +467,7 @@
           tvCheck(r, "liv", "Living room TV matches guest") +
         '</div>';
       body.appendChild(card);
-      roomEls[r] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name") };
+      roomEls[r] = { card: card, badge: card.querySelector(".badge"), name: card.querySelector(".guest .name"), lbl: card.querySelector(".guest .lbl") };
     });
 
     wrap.appendChild(head);
@@ -511,6 +514,7 @@
       var r = lab.getAttribute("data-r"), k = lab.getAttribute("data-k");
       roomState(r)[k] = box.checked;
       if (lab.classList.contains("tv") && box.checked) lab.classList.remove("show-name");
+      lockIfDone(r);
       updateRoom(r); queueSave(); refreshTotals();
       if (roomDone(roomState(r))) setTimeout(function () { roomEls[r].card.classList.add("collapsed"); }, 220);
     }
@@ -532,15 +536,20 @@
     if (t.matches("input[data-name]")) {
       var r = t.getAttribute("data-r"), nk = t.getAttribute("data-name");
       roomState(r)[nk] = t.value;
+      lockIfDone(r);
       updateRoom(r); queueSave(); refreshTotals();
     }
   });
 
   // ---- Rendering updates ----
-  function guestName(r) { return data.roster[r] || ""; }
+  function rosterName(r) { return data.roster[r] || ""; }
+  // Locked (completed) rooms report their snapshotted name; everything else is live.
+  function guestName(r) { var s = data.rooms[r]; if (s && s.guestLocked != null) return s.guestLocked; return rosterName(r); }
   function updateRoom(r) {
     var s = roomState(r), el = roomEls[r];
     var g = guestName(r);
+    var locked = s.guestLocked != null;
+    if (el.lbl) el.lbl.textContent = locked ? "Verified" : "Guest";
     if (g) { el.name.textContent = g; el.name.classList.remove("empty"); }
     else { el.name.textContent = "no name loaded"; el.name.classList.add("empty"); }
     var st = roomStatus(s);
@@ -566,7 +575,7 @@
   }
 
   // ---- Filter + search ----
-  var mode = "all";
+  var mode = "inc";   // default: hide completed rooms (tap "All" to unhide)
   var q = "";
   var userOpen = new Set();   // floors the user has manually expanded (empty-query state)
   function applyFilter(scrollToFloor) {
