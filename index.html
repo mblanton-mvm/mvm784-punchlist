@@ -380,15 +380,15 @@
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
 
-  function blankRoom() { return { relabel: false, fw: false, bedM: false, bedName: "", livM: false, livName: "", guestLocked: null }; }
+  function blankRoom() { return { relabel: false, fw: false, linear: false, bedM: false, bedName: "", livM: false, livName: "", guestLocked: null }; }
   function roomState(r) { if (!data.rooms[r]) data.rooms[r] = blankRoom(); return data.rooms[r]; }
   function roomDone(s) {
     var bed = s.bedM || (s.bedName || "").trim() !== "";
     var liv = s.livM || (s.livName || "").trim() !== "";
-    return s.relabel && s.fw && bed && liv;
+    return s.relabel && s.fw && s.linear && bed && liv;
   }
   function roomTouched(s) {
-    return s.relabel || s.fw || s.bedM || s.livM || (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== "";
+    return s.relabel || s.fw || s.linear || s.bedM || s.livM || (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== "";
   }
   function roomStatus(s) { return roomDone(s) ? "done" : (roomTouched(s) ? "partial" : ""); }
   function roomHasFlag(s) { return (s.bedName || "").trim() !== "" || (s.livName || "").trim() !== ""; }
@@ -463,6 +463,7 @@
         '<div class="checks">' +
           check(r, "relabel", "Both boxes relabeled", "Bedroom + living room STBs") +
           check(r, "fw", "Firmware verified", "Target 3.18") +
+          check(r, "linear", "Live linear content works", "Live TV channels playing") +
           tvCheck(r, "bed", "Bedroom TV matches guest") +
           tvCheck(r, "liv", "Living room TV matches guest") +
         '</div>';
@@ -721,6 +722,7 @@
         var miss = [];
         if (!s.relabel) miss.push("relabel");
         if (!s.fw) miss.push("firmware");
+        if (!s.linear) miss.push("live linear");
         if (!(s.bedM || (s.bedName || "").trim())) miss.push("bedroom TV");
         if (!(s.livM || (s.livName || "").trim())) miss.push("living TV");
         incomplete.push(r + " (" + g + ") — needs: " + miss.join(", "));
