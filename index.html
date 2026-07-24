@@ -832,6 +832,27 @@
     if (roomDone(id)) el.classList.add("collapsed");
   }
 
+  // Safety-net re-pull: catches anything the live socket missed (phone asleep, tab backgrounded, wifi blip)
+  function resync() {
+    if (!sb) return;
+    sb.from("punch_rooms").select("room_id,data").eq("property", PROP).then(function (res) {
+      if (res.error || !res.data) return;
+      var changed = [];
+      res.data.forEach(function (row) {
+        var id = row.room_id;
+        if (recentlyMine(id)) return;
+        if (JSON.stringify(data.rooms[id]) !== JSON.stringify(row.data)) { data.rooms[id] = row.data; changed.push(id); }
+      });
+      if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) { syncRoomDom(id); updateRoom(id); } }); refreshTotals(); }
+    }, function () {});
+    sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
+      if (res.error || !res.data) return;
+      var changed = [];
+      res.data.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
+      if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
+    }, function () {});
+  }
+
   function initSync() {
     if (!window.supabase || !window.supabase.createClient) { setStatus("local"); return; }
     try { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch (e) { setStatus("local"); return; }
@@ -857,11 +878,13 @@
         if (p.new && p.new.room_id != null) applyServerRoster(p.new.room_id, p.new.name);
       })
       .subscribe(function (status) {
-        if (status === "SUBSCRIBED") { setStatus(pending.size ? "sync" : "live"); flushPending(); }
+        if (status === "SUBSCRIBED") { setStatus(pending.size ? "sync" : "live"); flushPending(); resync(); }
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setStatus("offline");
       });
-    setInterval(flushPending, 15000);
-    window.addEventListener("online", flushPending);
+    setInterval(function () { flushPending(); resync(); }, 20000);
+    window.addEventListener("online", function () { flushPending(); resync(); });
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") { flushPending(); resync(); } });
+    window.addEventListener("focus", resync);
   }
 
   // ---- Init ----
