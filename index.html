@@ -325,11 +325,11 @@
       <button class="iconbtn" data-close="export" aria-label="Close">✕</button>
     </div>
     <div class="sheet-body">
-      <p class="hint">Send this to Michele when you're done (or partway). The report lists what's left and every TV that showed a different name.</p>
+      <p class="hint">Send this to Michele when you're done (or partway). The Excel file has a row per unit — room #, guest name, every check, and any different names shown on the TVs.</p>
       <div class="sheet-actions" style="margin-top:0">
-        <button class="fbtn primary" id="expCopyReport">Copy report</button>
+        <button class="fbtn primary" id="expXlsx">⬇ Download Excel</button>
+        <button class="fbtn" id="expCopyReport">Copy report</button>
         <button class="fbtn" id="expCopyJson">Copy raw data</button>
-        <button class="fbtn" id="expDownload">Download file</button>
       </div>
       <div class="msg" id="exportMsg"></div>
       <textarea id="exportOut" spellcheck="false" readonly style="margin-top:12px;min-height:230px"></textarea>
@@ -541,6 +541,13 @@
       updateRoom(r); queueSave(); refreshTotals();
     }
   });
+  // Keep the room being typed in visible; only re-apply the filter once the field loses focus.
+  listEl.addEventListener("focusin", function (e) {
+    if (e.target.matches && e.target.matches("input[data-name]")) editingRoom = e.target.getAttribute("data-r");
+  });
+  listEl.addEventListener("focusout", function (e) {
+    if (e.target.matches && e.target.matches("input[data-name]")) { editingRoom = null; applyFilter(); }
+  });
 
   // ---- Rendering updates ----
   function rosterName(r) { return data.roster[r] || ""; }
@@ -579,6 +586,7 @@
   var mode = "inc";   // default: hide completed rooms (tap "All" to unhide)
   var q = "";
   var userOpen = new Set();   // floors the user has manually expanded (empty-query state)
+  var editingRoom = null;     // room whose mismatch-name field is focused (never hide/collapse it mid-type)
   function applyFilter(scrollToFloor) {
     var raw = q.trim().toLowerCase();
     var fm = raw.match(/^(?:floor|flr|fl|f)\s*0*(\d{1,2})$/);
@@ -598,6 +606,7 @@
           var hay = (r + " " + guestName(r)).toLowerCase();
           if (hay.indexOf(query) === -1) vis = false;
         }
+        if (r === editingRoom) vis = true;
         el.style.display = vis ? "" : "none";
         if (vis) shown++;
       });
@@ -748,17 +757,75 @@
   var exportMsg = document.getElementById("exportMsg");
   document.getElementById("expCopyReport").addEventListener("click", function () { copy(document.getElementById("exportOut").value, exportMsg, "Report copied — paste it into a message to Michele."); });
   document.getElementById("expCopyJson").addEventListener("click", function () { copy(document.getElementById("exportOut").getAttribute("data-json"), exportMsg, "Raw data copied."); });
-  document.getElementById("expDownload").addEventListener("click", function () {
+  document.getElementById("expXlsx").addEventListener("click", function () {
     try {
-      var blob = new Blob([document.getElementById("exportOut").value], { type: "text/plain" });
+      var headers = ["Room", "Guest / check-in", "Relabeled", "Firmware 3.18", "Live linear", "Bedroom TV match", "Bedroom name shown", "Living TV match", "Living name shown", "Status"];
+      var rows = [];
+      ROOMS.forEach(function (r) {
+        var s = roomState(r);
+        rows.push([r, guestName(r) || "", yn(s.relabel), yn(s.fw), yn(s.linear), yn(s.bedM), (s.bedName || "").trim(), yn(s.livM), (s.livName || "").trim(), roomDone(s) ? "Complete" : "Incomplete"]);
+      });
+      var blob = makeXlsx(headers, rows);
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      var tag = (data.prop || "punchlist").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-      a.href = url; a.download = tag + "-punchlist.txt"; document.body.appendChild(a); a.click();
-      document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
-      exportMsg.textContent = "Download started."; exportMsg.className = "msg ok";
-    } catch (e) { exportMsg.textContent = "Download blocked here — use Copy report instead."; exportMsg.className = "msg bad"; }
+      var d = new Date(), stamp = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+      var tag = (data.prop || "punchlist").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
+      a.href = url; a.download = tag + "-" + stamp + ".xlsx"; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+      exportMsg.textContent = "Excel file downloaded — " + rows.length + " rooms."; exportMsg.className = "msg ok";
+    } catch (e) { exportMsg.textContent = "Couldn't build the Excel file here — use Copy raw data instead."; exportMsg.className = "msg bad"; }
   });
+  function yn(b) { return b ? "Yes" : "No"; }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+
+  // ---- Minimal .xlsx writer (no dependencies): CRC32 + stored ZIP + inline-string sheet ----
+  function crc32(bytes) {
+    var table = crc32.t, c, n, k;
+    if (!table) { table = crc32.t = []; for (n = 0; n < 256; n++) { c = n; for (k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); table[n] = c >>> 0; } }
+    c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = table[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  var xlsxEnc = new TextEncoder();
+  function xmlEsc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[c]; }); }
+  function colRef(i) { var s = ""; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  function sheetXml(all) {
+    var out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'];
+    for (var r = 0; r < all.length; r++) {
+      out.push('<row r="' + (r + 1) + '">');
+      for (var c = 0; c < all[r].length; c++) out.push('<c r="' + colRef(c) + (r + 1) + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(all[r][c]) + '</t></is></c>');
+      out.push('</row>');
+    }
+    out.push('</sheetData></worksheet>');
+    return out.join("");
+  }
+  function makeXlsx(headers, rows) {
+    var files = [
+      { name: "[Content_Types].xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>' },
+      { name: "_rels/.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: "xl/workbook.xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Punch List" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+      { name: "xl/_rels/workbook.xml.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>' },
+      { name: "xl/worksheets/sheet1.xml", data: sheetXml([headers].concat(rows)) }
+    ];
+    function u16(n) { n = n >>> 0; return [n & 255, (n >>> 8) & 255]; }
+    function u32(n) { n = n >>> 0; return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]; }
+    var chunks = [], central = [], offset = 0;
+    files.forEach(function (f) {
+      var nameB = xlsxEnc.encode(f.name), dataB = xlsxEnc.encode(f.data), crc = crc32(dataB);
+      var local = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(dataB.length), u32(dataB.length), u16(nameB.length), u16(0));
+      chunks.push(new Uint8Array(local), nameB, dataB);
+      central.push({ crc: crc, size: dataB.length, nameB: nameB, offset: offset });
+      offset += local.length + nameB.length + dataB.length;
+    });
+    var cdStart = offset, cd = [];
+    central.forEach(function (e) {
+      var rec = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(e.crc), u32(e.size), u32(e.size), u16(e.nameB.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(e.offset));
+      cd.push(new Uint8Array(rec), e.nameB);
+      offset += rec.length + e.nameB.length;
+    });
+    var eocd = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length), u32(offset - cdStart), u32(cdStart), u16(0)));
+    return new Blob(chunks.concat(cd, [eocd]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
 
   // ---- Clipboard helper ----
   function copy(text, msgEl, okText) {
