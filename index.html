@@ -1,3 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b7cbb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MVM784 Berkley — Punch List</title>
+</head>
+<body>
 <style>
   :root {
     --bg: #eef1f5;
@@ -19,7 +31,7 @@
     --untouched: #b7c0cd;
     --shadow: 0 1px 2px rgba(20,32,44,.06), 0 4px 14px rgba(20,32,44,.05);
     --radius: 14px;
-    --tap: 52px;
+    --tap: 58px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -67,7 +79,8 @@
     color: var(--ink);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
-    padding-bottom: 84px;
+    padding-bottom: 96px;
+    font-size: 16px;
   }
   .mono { font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace; font-variant-numeric: tabular-nums; }
 
@@ -80,8 +93,8 @@
   }
   .bar-inner { max-width: 680px; margin: 0 auto; padding: 10px 14px 12px; }
   .titlerow { display: flex; align-items: center; gap: 10px; }
-  .titlerow h1 { font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -.01em; flex: 1; min-width: 0; }
-  .titlerow h1 .prop { display:block; font-size: 11px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+  .titlerow h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -.01em; flex: 1; min-width: 0; }
+  .titlerow h1 .prop { display:block; font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
   .iconbtn {
     appearance: none; border: 1px solid var(--line-strong); background: var(--surface-2);
     color: var(--ink-2); width: 38px; height: 38px; border-radius: 10px; font-size: 17px;
@@ -91,8 +104,8 @@
 
   .progress-wrap { margin-top: 11px; }
   .progress-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
-  .progress-top .count { font-size: 13px; color: var(--ink-2); font-weight: 600; }
-  .progress-top .count b { color: var(--ink); font-size: 15px; }
+  .progress-top .count { font-size: 14px; color: var(--ink-2); font-weight: 600; }
+  .progress-top .count b { color: var(--ink); font-size: 16px; }
   .progress-top .saved { font-size: 11px; color: var(--ink-soft); display: flex; align-items: center; gap: 5px; }
   .savedot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
   .savedot.saving { background: var(--warn); }
@@ -103,8 +116,8 @@
   .tools { display: flex; gap: 8px; margin-top: 11px; }
   .search { flex: 1; position: relative; }
   .search input {
-    width: 100%; height: 42px; border-radius: 11px; border: 1px solid var(--line-strong);
-    background: var(--surface-2); color: var(--ink); padding: 0 12px 0 36px; font-size: 15px;
+    width: 100%; height: 46px; border-radius: 11px; border: 1px solid var(--line-strong);
+    background: var(--surface-2); color: var(--ink); padding: 0 12px 0 38px; font-size: 16.5px;
   }
   .search::before { content: "⌕"; position: absolute; left: 11px; top: 50%; transform: translateY(-52%); font-size: 19px; color: var(--ink-soft); }
   .seg { display: flex; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 11px; padding: 3px; flex: none; }
@@ -127,8 +140,9 @@
   }
   .floor-head .chev { font-size: 13px; color: var(--ink-soft); transition: transform .18s ease; }
   .floor.collapsed .chev { transform: rotate(-90deg); }
-  .floor-head .fname { font-weight: 700; font-size: 15px; flex: 1; }
-  .floor-head .fmeta { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+  .floor-head { padding: 14px 15px; }
+  .floor-head .fname { font-weight: 700; font-size: 17px; flex: 1; }
+  .floor-head .fmeta { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
   .floor-head .fbar { width: 46px; height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; }
   .floor-head .fbar > i { display: block; height: 100%; background: var(--good); width: 0%; }
   .floor-body { display: flex; flex-direction: column; gap: 9px; padding-top: 9px; }
@@ -147,10 +161,10 @@
   .card-head .chev { font-size: 13px; color: var(--ink-soft); flex: none; transition: transform .18s ease; }
   .card.collapsed .chev { transform: rotate(-90deg); }
   .card.collapsed .checks { display: none; }
-  .room-no { font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
+  .room-no { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
   .guest { flex: 1; min-width: 0; }
-  .guest .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); font-weight: 700; }
-  .guest .name { font-size: 15px; font-weight: 600; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .guest .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); font-weight: 700; }
+  .guest .name { font-size: 16.5px; font-weight: 600; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .guest .name.empty { color: var(--ink-soft); font-weight: 500; font-style: italic; }
   .badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 4px 8px; border-radius: 999px; flex: none; }
   .badge.done { background: var(--good-soft); color: var(--good); }
@@ -165,13 +179,13 @@
   .checks > .check:first-child { border-top: 0; }
   .check input { position: absolute; opacity: 0; pointer-events: none; }
   .box {
-    width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line-strong);
+    width: 29px; height: 29px; border-radius: 8px; border: 2px solid var(--line-strong);
     background: var(--surface-2); flex: none; display: grid; place-items: center;
-    color: transparent; font-size: 15px; font-weight: 800; transition: all .12s ease;
+    color: transparent; font-size: 17px; font-weight: 800; transition: all .12s ease;
   }
   .check input:checked + .box { background: var(--good); border-color: var(--good); color: #fff; }
-  .check .ctext { font-size: 15px; font-weight: 500; flex: 1; }
-  .check .ctext small { display: block; font-size: 11px; color: var(--ink-soft); font-weight: 500; margin-top: 1px; }
+  .check .ctext { font-size: 16.5px; font-weight: 500; flex: 1; }
+  .check .ctext small { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
 
   /* TV rows: checkbox hit-area + a separate "name differs" toggle */
   .check.tv { display: flex; align-items: center; padding-right: 10px; }
@@ -179,7 +193,7 @@
   .check.tv .hit .ctext { font-weight: 600; }
   .differs {
     appearance: none; border: 1px solid var(--line-strong); background: var(--surface-2);
-    color: var(--ink-soft); font-size: 12px; font-weight: 700; height: 32px; padding: 0 12px;
+    color: var(--ink-soft); font-size: 13px; font-weight: 700; height: 36px; padding: 0 13px;
     border-radius: 9px; cursor: pointer; white-space: nowrap; flex: none;
   }
   .check.tv.show-name .differs { background: var(--flag-soft); border-color: var(--flag); color: var(--flag); }
@@ -189,8 +203,8 @@
   .check.tv.show-name + .mismatch { display: block; }
   .mismatch label { display: block; font-size: 11px; font-weight: 700; color: var(--flag); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
   .mismatch input {
-    width: 100%; height: 44px; border-radius: 10px; border: 1.5px solid var(--flag);
-    background: var(--flag-soft); color: var(--ink); padding: 0 12px; font-size: 15px; font-weight: 600;
+    width: 100%; height: 48px; border-radius: 10px; border: 1.5px solid var(--flag);
+    background: var(--flag-soft); color: var(--ink); padding: 0 12px; font-size: 16.5px; font-weight: 600;
   }
   .mismatch input::placeholder { color: var(--ink-soft); font-weight: 400; }
 
@@ -206,8 +220,8 @@
   }
   .footer-inner { max-width: 680px; margin: 0 auto; display: flex; gap: 8px; }
   .fbtn {
-    appearance: none; flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--line-strong);
-    background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer;
+    appearance: none; flex: 1; height: 50px; border-radius: 12px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 7px;
   }
   .fbtn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -258,7 +272,7 @@
         <div class="track"><i id="trackFill"></i></div>
       </div>
       <div class="tools">
-        <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room or guest…" autocomplete="off"></div>
+        <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room, guest, or ‘floor 12’…" autocomplete="off"></div>
         <div class="seg" role="group" aria-label="Filter">
           <button id="fAll" aria-pressed="true">All</button>
           <button id="fInc" aria-pressed="false">To do</button>
@@ -423,7 +437,7 @@
 
   floors.forEach(function (fl) {
     var wrap = document.createElement("section");
-    wrap.className = "floor";
+    wrap.className = "floor collapsed";
     var head = document.createElement("button");
     head.className = "floor-head";
     head.innerHTML = '<span class="chev">▾</span><span class="fname">Floor ' + fl.f + '</span>' +
@@ -458,7 +472,11 @@
     listEl.appendChild(wrap);
     floorEls[fl.f] = { wrap: wrap, meta: head.querySelector(".fmeta"), bar: head.querySelector(".fbar > i"), body: body, rooms: fl.rooms };
 
-    head.addEventListener("click", function () { wrap.classList.toggle("collapsed"); });
+    head.addEventListener("click", function () {
+      var f = fl.f;
+      if (userOpen.has(f)) userOpen.delete(f); else userOpen.add(f);
+      wrap.classList.toggle("collapsed", !userOpen.has(f));
+    });
   });
 
   function check(r, key, label, sub) {
@@ -550,26 +568,43 @@
   // ---- Filter + search ----
   var mode = "all";
   var q = "";
-  function applyFilter() {
-    var query = q.trim().toLowerCase();
+  var userOpen = new Set();   // floors the user has manually expanded (empty-query state)
+  function applyFilter(scrollToFloor) {
+    var raw = q.trim().toLowerCase();
+    var fm = raw.match(/^(?:floor|flr|fl|f)\s*0*(\d{1,2})$/);
+    var floorQuery = fm ? parseInt(fm[1], 10) : null;
+    var query = floorQuery === null ? raw : "";
     floors.forEach(function (fl) {
+      var isTarget = floorQuery !== null && fl.f === floorQuery;
       var shown = 0;
       fl.rooms.forEach(function (r) {
         var s = roomState(r);
         var el = roomEls[r].card;
         var vis = true;
         if (mode === "inc" && roomDone(s)) vis = false;
-        if (query) {
+        if (floorQuery !== null) {
+          if (!isTarget) vis = false;
+        } else if (query) {
           var hay = (r + " " + guestName(r)).toLowerCase();
           if (hay.indexOf(query) === -1) vis = false;
         }
         el.style.display = vis ? "" : "none";
         if (vis) shown++;
       });
-      floorEls[fl.f].wrap.style.display = shown ? "" : "none";
+      var fe = floorEls[fl.f];
+      fe.wrap.style.display = shown ? "" : "none";
+      // expand rule: floor-jump → only the target; text search → any floor with hits; idle → user's choice
+      var collapse;
+      if (floorQuery !== null) collapse = !isTarget;
+      else if (query) collapse = shown === 0;
+      else collapse = !userOpen.has(fl.f);
+      fe.wrap.classList.toggle("collapsed", collapse);
     });
+    if (scrollToFloor && floorQuery !== null && floorEls[floorQuery]) {
+      floorEls[floorQuery].wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
-  document.getElementById("search").addEventListener("input", function (e) { q = e.target.value; applyFilter(); });
+  document.getElementById("search").addEventListener("input", function (e) { q = e.target.value; applyFilter(true); });
   var fAll = document.getElementById("fAll"), fInc = document.getElementById("fInc");
   fAll.addEventListener("click", function () { mode = "all"; fAll.setAttribute("aria-pressed", "true"); fInc.setAttribute("aria-pressed", "false"); applyFilter(); });
   fInc.addEventListener("click", function () { mode = "inc"; fInc.setAttribute("aria-pressed", "true"); fAll.setAttribute("aria-pressed", "false"); applyFilter(); });
@@ -580,6 +615,7 @@
       var r = ROOMS[i];
       if (!roomDone(roomState(r))) {
         var fl = floorOf(r);
+        userOpen.add(fl);
         floorEls[fl].wrap.classList.remove("collapsed");
         var card = roomEls[r].card;
         card.classList.remove("collapsed");
@@ -752,3 +788,6 @@
   mark("saved");
 })();
 </script>
+
+</body>
+</html>
