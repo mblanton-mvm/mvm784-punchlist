@@ -721,8 +721,17 @@
     if (Array.isArray(obj)) keys = obj.map(String);
     else if (obj && typeof obj === "object") keys = Object.keys(obj).filter(function (k) { return obj[k]; });
     else { fwMsg.textContent = "Expected a list or object of room numbers."; fwMsg.className = "msg bad"; return; }
-    var set = {}, known = 0, unknown = [];
-    keys.forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { set[rm.id] = true; known++; } else unknown.push(String(k).trim()); });
+    var set = {}, unknown = [];
+    keys.forEach(function (k) {
+      var t = String(k).trim(); if (!t) return;
+      var hit = false, hasLetter = /[A-Za-z]/.test(t), dt = t.replace(/[^0-9]/g, "");
+      MODEL.list.forEach(function (rm) {
+        if (rm.id === t || rm.roomNo === t) { set[rm.id] = true; hit = true; }
+        else if (!hasLetter && dt && rm.roomNo.replace(/[^0-9]/g, "") === dt) { set[rm.id] = true; hit = true; } // plain room # → all its units
+      });
+      if (!hit) unknown.push(t);
+    });
+    var known = Object.keys(set).length;
     data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(Object.keys(set));
     var m = "Flagged " + known + " room" + (known === 1 ? "" : "s") + " for M2 FW update.";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown: " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
