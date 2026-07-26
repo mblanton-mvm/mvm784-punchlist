@@ -351,6 +351,18 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
+  var BUILD_ID = "1785085563";   // bumped every deploy; used for auto-update
+
+  // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
+  function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
+  function checkUpdate() {
+    try {
+      fetch(location.pathname + "?_=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (html) {
+        var m = html.match(/BUILD_ID = "([^"]+)"/);
+        if (m && m[1] && m[1] !== "1785085563" && m[1] !== BUILD_ID && !isBusy()) location.reload();
+      }).catch(function () {});
+    } catch (e) {}
+  }
 
   /* ===CONFIG=== */
   var CONFIG = {
@@ -1139,6 +1151,11 @@
   refreshTotals();
   setStatus("local");
   initSync();
+  // Auto-update to the latest deployed build
+  setInterval(checkUpdate, 180000);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checkUpdate(); });
+  window.addEventListener("focus", checkUpdate);
+  setTimeout(checkUpdate, 8000);
 })();
 </script>
 
