@@ -351,7 +351,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785086565";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785087245";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -359,7 +359,7 @@
     try {
       fetch(location.pathname + "?_=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (html) {
         var m = html.match(/BUILD_ID = "([^"]+)"/);
-        if (m && m[1] && m[1] !== "1785086565" && m[1] !== BUILD_ID && !isBusy()) location.reload();
+        if (m && m[1] && m[1] !== "1785087245" && m[1] !== BUILD_ID && !isBusy()) location.reload();
       }).catch(function () {});
     } catch (e) {}
   }
@@ -1058,24 +1058,37 @@
   }
 
   // Safety-net re-pull: catches anything the live socket missed (phone asleep, tab backgrounded, wifi blip)
+  // Paginated fetch — PostgREST caps a single response at 1000 rows, so page through until exhausted
+  // (essential for large properties like 783 with 2256 rooms / ~2000 roster rows).
+  function fetchAll(table, cols, done) {
+    var all = [], from = 0, PAGE = 1000;
+    (function next() {
+      sb.from(table).select(cols).eq("property", PROP).range(from, from + PAGE - 1).then(function (res) {
+        if (res.error || !res.data) { done(all, res.error || true); return; }
+        all = all.concat(res.data);
+        if (res.data.length === PAGE) { from += PAGE; next(); } else done(all, null);
+      }, function (e) { done(all, e); });
+    })();
+  }
+
   function resync() {
     if (!sb) return;
-    sb.from("punch_rooms").select("room_id,data").eq("property", PROP).then(function (res) {
-      if (res.error || !res.data) return;
+    fetchAll("punch_rooms", "room_id,data", function (rows, err) {
+      if (err) return;
       var changed = [];
-      res.data.forEach(function (row) {
+      rows.forEach(function (row) {
         var id = row.room_id;
         if (recentlyMine(id)) return;
         if (JSON.stringify(data.rooms[id]) !== JSON.stringify(row.data)) { data.rooms[id] = row.data; changed.push(id); }
       });
       if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) { syncRoomDom(id); updateRoom(id); } }); refreshTotals(); }
-    }, function () {});
-    sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
-      if (res.error || !res.data) return;
+    });
+    fetchAll("punch_roster", "room_id,name", function (rows, err) {
+      if (err) return;
       var changed = [];
-      res.data.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
+      rows.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
       if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
-    }, function () {});
+    });
     pullFw(); pullFocus();
   }
 
@@ -1097,12 +1110,12 @@
 
   function pullFw() {
     if (!sb) return;
-    sb.from("punch_fw").select("room_id").eq("property", PROP).then(function (res) {
-      if (res.error || !res.data) return;
-      var set = flagSetFromTokens(res.data.map(function (r) { return r.room_id; })).set;
+    fetchAll("punch_fw", "room_id", function (rows, err) {
+      if (err) return;
+      var set = flagSetFromTokens(rows.map(function (r) { return r.room_id; })).set;
       if (JSON.stringify(set) === JSON.stringify(data.fw)) return;
       data.fw = set; queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals();
-    }, function () {});
+    });
   }
   function pushFwTargets(ids) {
     if (!sb) return;
@@ -1117,17 +1130,20 @@
     if (!window.supabase || !window.supabase.createClient) { setStatus("local"); return; }
     try { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); } catch (e) { setStatus("local"); return; }
     setStatus("sync");
-    sb.from("punch_rooms").select("room_id,data").eq("property", PROP).then(function (res) {
+    fetchAll("punch_rooms", "room_id,data", function (rows, err) {
       var serverIds = {};
-      if (!res.error && res.data) res.data.forEach(function (row) { serverIds[row.room_id] = 1; if (!pending.has(row.room_id)) data.rooms[row.room_id] = row.data; });
+      rows.forEach(function (row) { serverIds[row.room_id] = 1; if (!pending.has(row.room_id)) data.rooms[row.room_id] = row.data; });
       // seed the server with any local-only work (e.g. what a crew already did before this switch)
-      Object.keys(data.rooms).forEach(function (id) { if (!serverIds[id] && roomState(id) && (roomDone(id) || true)) pending.add(id); });
+      Object.keys(data.rooms).forEach(function (id) { if (!serverIds[id]) pending.add(id); });
       persistPending(); queueSave();
       ROOMS.forEach(function (id) { if (roomEls[id]) { syncRoomDom(id); updateRoom(id); } });
       refreshTotals(); flushPending();
-    }, function () { setStatus("offline"); });
-    sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
-      if (!res.error && res.data) { res.data.forEach(function (row) { data.roster[row.room_id] = row.name; }); queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
+      if (err) setStatus("offline");
+    });
+    fetchAll("punch_roster", "room_id,name", function (rows, err) {
+      if (err) return;
+      rows.forEach(function (row) { data.roster[row.room_id] = row.name; });
+      queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals();
     });
     pullFw(); pullFocus();
     sb.channel("punch-" + PROP)
