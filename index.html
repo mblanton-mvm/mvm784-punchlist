@@ -244,6 +244,7 @@
       <div class="tools">
         <div class="search"><input id="search" type="search" inputmode="search" placeholder="Find room or guest…" autocomplete="off"></div>
         <select id="filterSel" class="filtersel" aria-label="Filter rooms">
+          <option value="focus" id="focusOpt" hidden>📋 Today's list</option>
           <option value="inc">To do</option>
           <option value="all">All rooms</option>
           <option value="done">Completed</option>
@@ -327,6 +328,14 @@
         <button class="fbtn danger" id="fwClear">Clear FW targets</button>
       </div>
       <div class="msg" id="fwMsg"></div>
+      <p class="hint" style="margin-top:22px">Today's focus list (e.g. vacant / checked-out rooms) — name it, then paste the room numbers (newline, comma, or JSON all work). It becomes a <b>📋</b> filter so the tech visits only those rooms. Plain room # includes every unit (2602 → 2602A + 2602B); trailing tags like <code>-ADA</code> / <code>[JT]</code> are ignored.</p>
+      <textarea id="focusLabel" spellcheck="false" style="min-height:44px" placeholder="List name — e.g. 07/26 Vacant"></textarea>
+      <textarea id="focusInput" spellcheck="false" style="min-height:96px" placeholder="2602&#10;2604&#10;2711A"></textarea>
+      <div class="sheet-actions">
+        <button class="fbtn primary" id="focusApply">Apply focus list</button>
+        <button class="fbtn danger" id="focusClear">Clear focus list</button>
+      </div>
+      <div class="msg" id="focusMsg"></div>
       <p class="hint" style="margin-top:22px">Start a fresh day — wipes every check-off and TV note (guest names stay).</p>
       <div class="sheet-actions"><button class="fbtn danger" id="cfgReset">Reset all check-offs</button></div>
       <div class="msg" id="cfgMsg"></div>
@@ -395,6 +404,35 @@
   data.rooms = data.rooms || {};
   data.roster = data.roster || {};
   data.fw = data.fw || {};   // room_id -> true : "M2 FW update needed" targets (imported from RMMS)
+  data.focus = data.focus || { label: "", rooms: {} };   // named "today's list" (e.g. vacant rooms) → filterable view
+  data.focus.rooms = data.focus.rooms || {};
+
+  // Normalize a messy room token → digits + optional unit letter, ignoring trailing junk
+  // "1305A-ADA"→"1305A", "5703 [JT]-ADA"→"5703", "81001B-DLX"→"81001B", "1105"→"1105"
+  function normToken(raw) {
+    var m = String(raw).trim().match(/^(\d+)\s*([ABSabs])?/);
+    return m ? m[1] + (m[2] ? m[2].toUpperCase() : "") : "";
+  }
+  // Resolve a cleaned token to room ids: exact unit code → that unit; plain room # → every unit in that room
+  function resolveToken(t) {
+    var ids = [], hasLetter = /[A-Za-z]/.test(t), dt = t.replace(/[^0-9]/g, "");
+    MODEL.list.forEach(function (rm) {
+      if (rm.id === t || rm.roomNo === t) ids.push(rm.id);
+      else if (!hasLetter && dt && rm.roomNo.replace(/[^0-9]/g, "") === dt) ids.push(rm.id);
+    });
+    return ids;
+  }
+  // Parse an import payload into a list of raw tokens: JSON array, JSON object keys, or a raw delimited list
+  function parseTokens(txt) {
+    var t = txt.trim();
+    try {
+      var o = JSON.parse(t);
+      if (Array.isArray(o)) return o.map(String);
+      if (o && typeof o === "object") return Object.keys(o).filter(function (k) { return o[k]; });
+    } catch (e) {}
+    // raw list: pull out every room pattern (digits + optional unit letter), ignoring tags like "-ADA" / "[JT]"
+    return t.match(/\d+[ABSabs]?/g) || [];
+  }
 
   // Each question is a Yes/No toggle: value "" (unanswered) | "yes" | "no". A room is DONE when every
   // question has an answer (Yes OR No). A "No" answer flags an issue (surfaced in filters + badge + export).
@@ -437,13 +475,9 @@
   function flagSetFromTokens(tokens) {
     var set = {}, unknown = [];
     (tokens || []).forEach(function (k) {
-      var t = String(k).trim(); if (!t) return;
-      var hit = false, hasLetter = /[A-Za-z]/.test(t), dt = t.replace(/[^0-9]/g, "");
-      MODEL.list.forEach(function (rm) {
-        if (rm.id === t || rm.roomNo === t) { set[rm.id] = true; hit = true; }
-        else if (!hasLetter && dt && rm.roomNo.replace(/[^0-9]/g, "") === dt) { set[rm.id] = true; hit = true; }
-      });
-      if (!hit) unknown.push(t);
+      var raw = String(k).trim(); if (!raw) return;
+      var t = normToken(k); var ids = t ? resolveToken(t) : [];
+      if (ids.length) ids.forEach(function (id) { set[id] = true; }); else unknown.push(raw);
     });
     return { set: set, unknown: unknown };
   }
@@ -626,6 +660,7 @@
       case "nolinear": return roomDone(id) && s.linear === "no";
       case "notv": return roomDone(id) && rm.tvs.some(function (tv) { return s.tv[tv.key].match === "no"; });
       case "fwneeded": return !!data.fw[id];
+      case "focus": return !!data.focus.rooms[id];
       case "comment": return (s.commentText || "").trim() !== "";
       default: return !roomDone(id); // "inc" = To do (not completed)
     }
@@ -699,8 +734,14 @@
       });
     } else if (obj && typeof obj === "object") { map = obj; }
     else { rmsg('Expected a guest list — a PMS export array, or an object like {"1101A":"Name"}.', false); return; }
-    var known = 0, unknown = [], changed = [];
-    Object.keys(map).forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { data.roster[rm.id] = String(map[k]); changed.push(rm.id); known++; } else unknown.push(String(k).trim()); });
+    var unknown = [], changed = [];
+    Object.keys(map).forEach(function (k) {
+      var raw = String(k).trim(); if (!raw) return;
+      var t = normToken(k), ids = t ? resolveToken(t) : [], name = String(map[k]);
+      if (ids.length) ids.forEach(function (id) { data.roster[id] = name; changed.push(id); }); // plain room # → every unit (1106 → 1106A + 1106B)
+      else unknown.push(raw);
+    });
+    var known = changed.length;
     ROOMS.forEach(updateRoom); persist(); pushRoster(changed);
     var m = "Loaded " + known + " name" + (known === 1 ? "" : "s") + ".";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown room" + (unknown.length === 1 ? "" : "s") + ": " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
@@ -743,14 +784,9 @@
   document.getElementById("fwApply").addEventListener("click", function () {
     var txt = document.getElementById("fwInput").value.trim();
     if (!txt) { fwMsg.textContent = "Paste room numbers first."; fwMsg.className = "msg bad"; return; }
-    var obj; try { obj = JSON.parse(txt); } catch (e) { fwMsg.textContent = 'Not valid JSON — use ["101","305"] or {"101":true}.'; fwMsg.className = "msg bad"; return; }
-    var keys;
-    if (Array.isArray(obj)) keys = obj.map(String);
-    else if (obj && typeof obj === "object") keys = Object.keys(obj).filter(function (k) { return obj[k]; });
-    else { fwMsg.textContent = "Expected a list or object of room numbers."; fwMsg.className = "msg bad"; return; }
-    var res = flagSetFromTokens(keys), set = res.set, unknown = res.unknown;
+    var res = flagSetFromTokens(parseTokens(txt)), set = res.set, unknown = res.unknown;
     var known = Object.keys(set).length;
-    data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(keys);
+    data.fw = set; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets(Object.keys(set));
     var m = "Flagged " + known + " room" + (known === 1 ? "" : "s") + " for M2 FW update.";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown: " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
     fwMsg.textContent = m; fwMsg.className = "msg " + (known ? "ok" : "bad");
@@ -759,6 +795,31 @@
     if (!confirm("Clear ALL M2 FW-update flags for EVERYONE on this list?")) return;
     data.fw = {}; ROOMS.forEach(updateRoom); persist(); refreshTotals(); pushFwTargets([]);
     fwMsg.textContent = "FW targets cleared."; fwMsg.className = "msg ok";
+  });
+
+  // ---- Today's focus list (e.g. vacant rooms) ----
+  var focusMsg = document.getElementById("focusMsg");
+  function updateFocusOpt() {
+    var opt = document.getElementById("focusOpt"); if (!opt) return;
+    var n = Object.keys(data.focus.rooms).length;
+    opt.hidden = n === 0;
+    opt.textContent = "📋 " + (data.focus.label || "Today's list") + (n ? " (" + n + ")" : "");
+  }
+  document.getElementById("focusApply").addEventListener("click", function () {
+    var label = document.getElementById("focusLabel").value.trim();
+    var txt = document.getElementById("focusInput").value.trim();
+    if (!txt) { focusMsg.textContent = "Paste room numbers first."; focusMsg.className = "msg bad"; return; }
+    var res = flagSetFromTokens(parseTokens(txt)), set = res.set, known = Object.keys(set).length;
+    data.focus = { label: label, rooms: set }; persist(); updateFocusOpt(); refreshTotals(); pushFocus();
+    var m = 'Focus list "' + (label || "Today's list") + '" set — ' + known + " room" + (known === 1 ? "" : "s") + ".";
+    if (res.unknown.length) m += " Ignored " + res.unknown.length + " unknown: " + res.unknown.slice(0, 6).join(", ") + (res.unknown.length > 6 ? "…" : "");
+    focusMsg.textContent = m; focusMsg.className = "msg " + (known ? "ok" : "bad");
+  });
+  document.getElementById("focusClear").addEventListener("click", function () {
+    if (!confirm("Clear the focus list for EVERYONE on this list?")) return;
+    data.focus = { label: "", rooms: {} }; persist(); updateFocusOpt(); refreshTotals(); pushFocus();
+    if (document.getElementById("filterSel").value === "focus") { document.getElementById("filterSel").value = "inc"; mode = "inc"; applyFilter(); }
+    focusMsg.textContent = "Focus list cleared."; focusMsg.className = "msg ok";
   });
 
   // ---- Export ----
@@ -996,7 +1057,23 @@
       res.data.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
       if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
     }, function () {});
-    pullFw();
+    pullFw(); pullFocus();
+  }
+
+  function pullFocus() {
+    if (!sb) return;
+    sb.from("punch_meta").select("value").eq("property", PROP).eq("key", "focus").then(function (res) {
+      if (res.error || !res.data) return;
+      var v = res.data.length ? (res.data[0].value || {}) : {};
+      var nf = { label: v.label || "", rooms: flagSetFromTokens(v.rooms || []).set };
+      if (JSON.stringify(nf) === JSON.stringify(data.focus)) return;
+      data.focus = nf; queueSave(); updateFocusOpt(); refreshTotals();
+    }, function () {});
+  }
+  function pushFocus() {
+    if (!sb) return;
+    setStatus("sync");
+    sb.from("punch_meta").upsert([{ property: PROP, key: "focus", value: { label: data.focus.label, rooms: Object.keys(data.focus.rooms) } }], { onConflict: "property,key" }).then(function (res) { setStatus(res.error ? "offline" : "live"); }, function () { setStatus("offline"); });
   }
 
   function pullFw() {
@@ -1033,7 +1110,7 @@
     sb.from("punch_roster").select("room_id,name").eq("property", PROP).then(function (res) {
       if (!res.error && res.data) { res.data.forEach(function (row) { data.roster[row.room_id] = row.name; }); queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
     });
-    pullFw();
+    pullFw(); pullFocus();
     sb.channel("punch-" + PROP)
       .on("postgres_changes", { event: "*", schema: "public", table: "punch_rooms", filter: "property=eq." + PROP }, function (p) {
         if (p.eventType === "DELETE") { if (p.old && p.old.room_id != null) applyServerDelete(p.old.room_id); }
@@ -1043,6 +1120,7 @@
         if (p.new && p.new.room_id != null) applyServerRoster(p.new.room_id, p.new.name);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "punch_fw", filter: "property=eq." + PROP }, function () { pullFw(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "punch_meta", filter: "property=eq." + PROP }, function () { pullFocus(); })
       .subscribe(function (status) {
         if (status === "SUBSCRIBED") { setStatus(pending.size ? "sync" : "live"); flushPending(); resync(); }
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setStatus("offline");
@@ -1057,6 +1135,7 @@
   document.getElementById("search").placeholder = CONFIG.searchHint;
   applyTheme(); applyProp();
   ROOMS.forEach(updateRoom);
+  updateFocusOpt();
   refreshTotals();
   setStatus("local");
   initSync();
