@@ -275,7 +275,7 @@
       <button class="iconbtn" data-close="roster" aria-label="Close">✕</button>
     </div>
     <div class="sheet-body">
-      <p class="hint">Paste today's guest names as JSON — room number to name. Only rooms you include get updated; the rest keep their current name. This replaces today's names, not the check-offs.</p>
+      <p class="hint">Paste today's guest list — either your <b>PMS export</b> (the array of <code>{room, first, last, …}</code> rows) or a simple <code>{"1101A":"Name"}</code> object. Only rooms you include get updated; vacant rows (<code>~~~</code>) clear that room. This replaces names, not the check-offs.</p>
       <textarea id="rosterInput" spellcheck="false" placeholder='{
   "1001": "Rivera",
   "1002": "Chen"
@@ -685,9 +685,22 @@
     var txt = document.getElementById("rosterInput").value.trim();
     if (!txt) { rmsg("Paste some JSON first.", false); return; }
     var obj; try { obj = JSON.parse(txt); } catch (e) { rmsg("That's not valid JSON — check for a missing comma or quote.", false); return; }
-    if (typeof obj !== "object" || Array.isArray(obj)) { rmsg('Expected an object like {"1001":"Name"}.', false); return; }
+    // Accept either { "1101A": "Name" } OR a PMS export array [ { room, first, last, ... }, ... ]
+    var map = {};
+    if (Array.isArray(obj)) {
+      obj.forEach(function (row) {
+        if (!row || typeof row !== "object") return;
+        var rk = String(row.room != null ? row.room : (row.roomNo != null ? row.roomNo : "")).trim();
+        if (!rk) return;
+        var nm;
+        if (row.name != null) nm = String(row.name);
+        else nm = [row.first, row.last].filter(function (p) { var s = (p == null ? "" : String(p)).trim(); return s && s !== "~~~"; }).join(" ");
+        map[rk] = nm; // later duplicate rows win
+      });
+    } else if (obj && typeof obj === "object") { map = obj; }
+    else { rmsg('Expected a guest list — a PMS export array, or an object like {"1101A":"Name"}.', false); return; }
     var known = 0, unknown = [], changed = [];
-    Object.keys(obj).forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { data.roster[rm.id] = String(obj[k]); changed.push(rm.id); known++; } else unknown.push(String(k).trim()); });
+    Object.keys(map).forEach(function (k) { var rm = MODEL.byKey[String(k).trim()]; if (rm) { data.roster[rm.id] = String(map[k]); changed.push(rm.id); known++; } else unknown.push(String(k).trim()); });
     ROOMS.forEach(updateRoom); persist(); pushRoster(changed);
     var m = "Loaded " + known + " name" + (known === 1 ? "" : "s") + ".";
     if (unknown.length) m += " Ignored " + unknown.length + " unknown room" + (unknown.length === 1 ? "" : "s") + ": " + unknown.slice(0, 6).join(", ") + (unknown.length > 6 ? "…" : "");
