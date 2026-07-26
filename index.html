@@ -351,7 +351,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785085563";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785086565";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -359,7 +359,7 @@
     try {
       fetch(location.pathname + "?_=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (html) {
         var m = html.match(/BUILD_ID = "([^"]+)"/);
-        if (m && m[1] && m[1] !== "1785085563" && m[1] !== BUILD_ID && !isBusy()) location.reload();
+        if (m && m[1] && m[1] !== "1785086565" && m[1] !== BUILD_ID && !isBusy()) location.reload();
       }).catch(function () {});
     } catch (e) {}
   }
@@ -646,22 +646,25 @@
     } else { el.badge.hidden = true; }
   }
   function refreshTotals() {
-    var done = 0, total = ROOMS.length;
-    ROOMS.forEach(function (id) { if (roomDone(id)) done++; });
+    // When the vacant/focus view is active, counts reflect only the focus rooms (per floor + overall)
+    var scoped = mode === "focus";
+    var inView = function (id) { return !scoped || !!data.focus.rooms[id]; };
+    var done = 0, total = 0;
+    ROOMS.forEach(function (id) { if (inView(id)) { total++; if (roomDone(id)) done++; } });
     document.getElementById("doneN").textContent = done;
     document.getElementById("totalN").textContent = total;
     document.getElementById("trackFill").style.width = (total ? (done / total * 100) : 0) + "%";
     MODEL.sections.forEach(function (sec) {
-      var fd = 0; sec.rooms.forEach(function (rm) { if (roomDone(rm.id)) fd++; });
+      var fd = 0, ft = 0; sec.rooms.forEach(function (rm) { if (inView(rm.id)) { ft++; if (roomDone(rm.id)) fd++; } });
       var fe = sectionEls[sec.label];
-      fe.meta.textContent = fd + "/" + sec.rooms.length;
-      fe.bar.style.width = (fd / sec.rooms.length * 100) + "%";
+      fe.meta.textContent = fd + "/" + ft;
+      fe.bar.style.width = (ft ? (fd / ft * 100) : 0) + "%";
     });
     applyFilter();
   }
 
   // ---- Filter + search ----
-  var mode = "inc", q = "", userOpen = new Set(), editingRoom = null;
+  var mode = "inc", q = "", userOpen = new Set(), editingRoom = null, userPicked = false;
   function matchesMode(id) {
     var s = roomState(id), rm = roomDef(id);
     switch (mode) {
@@ -697,7 +700,7 @@
     if (scrollTo && firstMatch) firstMatch.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   document.getElementById("search").addEventListener("input", function (e) { q = e.target.value; applyFilter(true); });
-  document.getElementById("filterSel").addEventListener("change", function (e) { mode = e.target.value; applyFilter(true); });
+  document.getElementById("filterSel").addEventListener("change", function (e) { userPicked = true; mode = e.target.value; refreshTotals(); });
 
   // ---- Next to do ----
   document.getElementById("nextBtn").addEventListener("click", function () {
@@ -812,10 +815,14 @@
   // ---- Today's focus list (e.g. vacant rooms) ----
   var focusMsg = document.getElementById("focusMsg");
   function updateFocusOpt() {
-    var opt = document.getElementById("focusOpt"); if (!opt) return;
+    var opt = document.getElementById("focusOpt"), sel = document.getElementById("filterSel"); if (!opt || !sel) return;
     var n = Object.keys(data.focus.rooms).length;
     opt.hidden = n === 0;
     opt.textContent = "📋 " + (data.focus.label || "Today's list") + (n ? " (" + n + ")" : "");
+    // Default to the focus view when one exists and the user hasn't chosen a filter; keep the dropdown in sync with the real filter
+    if (n && !userPicked && mode === "inc") { mode = "focus"; sel.value = "focus"; refreshTotals(); }
+    else if (!n && mode === "focus") { mode = "inc"; sel.value = "inc"; refreshTotals(); }
+    else if (sel.value !== mode) { sel.value = mode; }
   }
   document.getElementById("focusApply").addEventListener("click", function () {
     var label = document.getElementById("focusLabel").value.trim();
