@@ -407,7 +407,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785280964";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785281355";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -987,13 +987,22 @@
     try {
       var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Use Device MAC?", "Live linear?"];
       CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " shows"); headers.push(tc.label + " name"); });
+      headers.push("Displays match?");
       (CONFIG.extraInputs || []).forEach(function (f) { headers.push(f.label); });
       headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (Vegas time)");
-      var rows = [];
-      ROOMS.forEach(function (id) {
+      var rows = [], redSet = new Set(), tvN = CONFIG.tvColumns.length, matchCol = 7 + 2 * tvN;
+      ROOMS.forEach(function (id, ri) {
         var s = roomState(id), rm = roomDef(id);
         var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.devmac), ynStr(s.linear)];
         CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(dispStr(e)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
+        var matchVal = "";
+        if (roomDone(id)) {
+          var dv = rm.tvs.map(function (tv) { return dispStr(s.tv[tv.key]); });
+          var same = dv.every(function (v) { return v === dv[0]; });
+          matchVal = same ? "Yes" : "No";
+          if (!same) { CONFIG.tvColumns.forEach(function (tc, i) { if (s.tv[tc.key]) redSet.add((ri + 1) + "," + (7 + 2 * i)); }); redSet.add((ri + 1) + "," + matchCol); }
+        }
+        row.push(matchVal);
         (CONFIG.extraInputs || []).forEach(function (f) { row.push((s.extra || {})[f.key] || ""); });
         row.push(data.fw[id] ? "Yes" : "");
         row.push((s.commentText || "").trim());
@@ -1002,7 +1011,7 @@
         row.push(s.doneAt ? new Date(s.doneAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "");
         rows.push(row);
       });
-      var blob = makeXlsx(headers, rows);
+      var blob = makeXlsx(headers, rows, redSet);
       var url = URL.createObjectURL(blob), a = document.createElement("a");
       var d = new Date(), stamp = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
       var tag = (data.prop || "punchlist").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
@@ -1025,23 +1034,24 @@
   var xlsxEnc = new TextEncoder();
   function xmlEsc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[c]; }); }
   function colRef(i) { var s = ""; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
-  function sheetXml(all) {
+  function sheetXml(all, red) {
     var out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'];
     for (var r = 0; r < all.length; r++) {
       out.push('<row r="' + (r + 1) + '">');
-      for (var c = 0; c < all[r].length; c++) out.push('<c r="' + colRef(c) + (r + 1) + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(all[r][c]) + '</t></is></c>');
+      for (var c = 0; c < all[r].length; c++) out.push('<c r="' + colRef(c) + (r + 1) + '"' + (red && red.has(r + "," + c) ? ' s="1"' : '') + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(all[r][c]) + '</t></is></c>');
       out.push('</row>');
     }
     out.push('</sheetData></worksheet>');
     return out.join("");
   }
-  function makeXlsx(headers, rows) {
+  function makeXlsx(headers, rows, red) {
     var files = [
-      { name: "[Content_Types].xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>' },
+      { name: "[Content_Types].xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
       { name: "_rels/.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
       { name: "xl/workbook.xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Punch List" sheetId="1" r:id="rId1"/></sheets></workbook>' },
-      { name: "xl/_rels/workbook.xml.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>' },
-      { name: "xl/worksheets/sheet1.xml", data: sheetXml([headers].concat(rows)) }
+      { name: "xl/_rels/workbook.xml.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: "xl/styles.xml", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFC7CE"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' },
+      { name: "xl/worksheets/sheet1.xml", data: sheetXml([headers].concat(rows), red) }
     ];
     function u16(n) { n = n >>> 0; return [n & 255, (n >>> 8) & 255]; }
     function u32(n) { n = n >>> 0; return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]; }
