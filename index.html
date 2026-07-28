@@ -173,6 +173,14 @@
   }
   .yn-btn[data-cval="yes"][aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff; }
   .yn-btn[data-cval="no"][aria-pressed="true"] { background: var(--flag); border-color: var(--flag); color: #fff; }
+  /* Welcome / Guest / Name display toggle (TV rows go vertical: label on top, 3 equal buttons below) */
+  .check.tv { flex-direction: column; align-items: stretch; gap: 9px; padding-top: 11px; padding-bottom: 11px; }
+  .check.tv .ctext { flex: none; }
+  .disp3 { display: flex; gap: 6px; }
+  .disp-btn { appearance: none; flex: 1; min-width: 0; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); font-size: 14px; font-weight: 700; height: 44px; padding: 0 6px; border-radius: 9px; cursor: pointer; }
+  .disp-btn[data-dval="welcome"][aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff; }
+  .disp-btn[data-dval="guest"][aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .disp-btn[data-dval="name"][aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: #fff; }
   .comment-field { padding: 2px 14px 12px 14px; display: none; }
   .check.comment.show-c + .comment-field { display: block; }
   .comment-field label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
@@ -251,7 +259,7 @@
           <option value="norelabel">⚠ Not relabeled</option>
           <option value="nofw">⚠ FW not verified</option>
           <option value="nolinear">⚠ Linear not working</option>
-          <option value="notv">⚠ TV mismatch</option>
+          <option value="notv">📺 Name shown on a TV</option>
           <option value="fwneeded">🔧 M2 FW update needed</option>
           <option value="comment">💬 Has comment</option>
         </select>
@@ -351,7 +359,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785239963";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785242916";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -454,7 +462,7 @@
     if (!data.rooms[id]) data.rooms[id] = blankRoom(rm);
     var s = data.rooms[id];
     if (!s.tv) s.tv = {};
-    rm.tvs.forEach(function (tv) { if (!s.tv[tv.key]) s.tv[tv.key] = { match: "", name: "" }; });
+    rm.tvs.forEach(function (tv) { if (!s.tv[tv.key]) s.tv[tv.key] = { display: "", name: "" }; });
     // migrate legacy 784 checkbox shape (bedM/livM) into the tv map, once
     if (s.bedM !== undefined && !s._mig) {
       if (s.tv.bed) s.tv.bed = { match: s.bedM ? "yes" : "", name: s.bedName || "" };
@@ -469,10 +477,10 @@
     }
     return s;
   }
-  function tvAnswered(e) { return e && (e.match === "yes" || e.match === "no"); }
+  function tvAnswered(e) { if (!e) return false; if (e.display === "welcome" || e.display === "guest") return true; if (e.display === "name") return (e.name || "").trim() !== ""; return e.match === "yes" || e.match === "no"; }
   function commentAnswered(s) { return s.commentChoice === "no" || (s.commentChoice === "yes" && (s.commentText || "").trim() !== ""); }
   function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.linear)) return false; if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvAnswered(s.tv[tv.key]); }); }
-  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.match || (e.name || "").trim() !== ""; }); }
+  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display || e.match || (e.name || "").trim() !== ""; }); }
   function issuesOf(id) {
     var s = roomState(id), rm = roomDef(id), out = [];
     if (s.relabel === "no") out.push("relabel");
@@ -482,7 +490,7 @@
     return out;
   }
   function roomStatus(id) { return roomDone(id) ? (issuesOf(id).length ? "issue" : "done") : (roomTouched(id) ? "partial" : ""); }
-  function lockIfDone(id) { var s = roomState(id); if (roomDone(id) && s.guestLocked == null) s.guestLocked = rosterName(id); }
+  function lockIfDone(id) { var s = roomState(id); if (roomDone(id)) { if (s.guestLocked == null) s.guestLocked = rosterName(id); if (!s.doneAt) s.doneAt = new Date().toISOString(); } else if (s.doneAt) { s.doneAt = null; } }
   // Resolve a list of room tokens (exact unit code, exact room#, or a plain room# → all its units) into a set of room ids.
   function flagSetFromTokens(tokens) {
     var set = {}, unknown = [];
@@ -528,11 +536,17 @@
   }
   function tvRow(id, tv) {
     var e = roomState(id).tv[tv.key];
-    return '<div class="check tv' + (e.match === "no" ? " show-name" : "") + '" data-r="' + esc(id) + '" data-field="' + tv.key + '">' +
-        '<span class="ctext">' + tv.label + '?</span>' + ynHtml(e.match) +
+    var d = e.display || "";
+    return '<div class="check tv' + (d === "name" ? " show-name" : "") + '" data-r="' + esc(id) + '" data-field="' + tv.key + '">' +
+        '<span class="ctext">' + esc(tvShort(tv.label)) + ' displays</span>' +
+        '<div class="disp3">' +
+          '<button type="button" class="disp-btn" data-dval="welcome" aria-pressed="' + (d === "welcome") + '">Welcome</button>' +
+          '<button type="button" class="disp-btn" data-dval="guest" aria-pressed="' + (d === "guest") + '">Guest</button>' +
+          '<button type="button" class="disp-btn" data-dval="name" aria-pressed="' + (d === "name") + '">Name</button>' +
+        '</div>' +
       '</div>' +
-      '<div class="mismatch"><label>Name showing on TV instead</label>' +
-        '<input type="text" data-r="' + esc(id) + '" data-tvname="' + tv.key + '" value="' + esc(e.name) + '" placeholder="Type the guest name shown" autocomplete="off"></div>';
+      '<div class="mismatch"><label>Name shown on the TV</label>' +
+        '<input type="text" data-r="' + esc(id) + '" data-tvname="' + tv.key + '" value="' + esc(e.name) + '" placeholder="Type the name shown" autocomplete="off"></div>';
   }
   function commentRow(id) {
     var s = roomState(id);
@@ -586,6 +600,19 @@
 
   // ---- Events ----
   listEl.addEventListener("click", function (e) {
+    var db = e.target.closest(".disp-btn");
+    if (db) {
+      var trow = db.closest(".check.tv"), tid = trow.getAttribute("data-r"), tkey = trow.getAttribute("data-field"), dval = db.getAttribute("data-dval");
+      var te = roomState(tid).tv[tkey], dnext = (te.display === dval) ? "" : dval;
+      te.display = dnext; if (te.match) te.match = "";
+      if (dnext !== "name") { te.name = ""; var dni = trow.nextElementSibling.querySelector("input[data-tvname]"); if (dni) dni.value = ""; }
+      trow.classList.toggle("show-name", dnext === "name");
+      trow.querySelectorAll(".disp-btn").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-dval") === dnext); });
+      if (dnext === "name") { var dni2 = trow.nextElementSibling.querySelector("input[data-tvname]"); if (dni2) setTimeout(function () { dni2.focus(); }, 30); }
+      lockIfDone(tid); updateRoom(tid); queueSave(); schedulePush(tid); refreshTotals();
+      if (roomDone(tid)) setTimeout(function () { roomEls[tid].card.classList.add("collapsed"); }, 220);
+      return;
+    }
     var yn = e.target.closest(".yn-btn");
     if (yn) {
       var row = yn.closest(".check"), id = row.getAttribute("data-r"), field = row.getAttribute("data-field"), val = yn.getAttribute("data-cval");
@@ -675,7 +702,7 @@
       case "norelabel": return roomDone(id) && s.relabel === "no";
       case "nofw": return roomDone(id) && s.fw === "no";
       case "nolinear": return roomDone(id) && s.linear === "no";
-      case "notv": return roomDone(id) && rm.tvs.some(function (tv) { return s.tv[tv.key].match === "no"; });
+      case "notv": return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display === "name" || e.match === "no"; });
       case "fwneeded": return !!data.fw[id];
       case "focus": return !!data.focus.rooms[id];
       case "comment": return (s.commentText || "").trim() !== "";
@@ -823,10 +850,9 @@
     var n = Object.keys(data.focus.rooms).length;
     opt.hidden = n === 0;
     opt.textContent = "📋 " + (data.focus.label || "Today's list") + (n ? " (" + n + ")" : "");
-    // Default to the focus view when one exists and the user hasn't chosen a filter; keep the dropdown in sync with the real filter
-    if (n && !userPicked && mode === "inc") { mode = "focus"; sel.value = "focus"; refreshTotals(); }
-    else if (!n && mode === "focus") { mode = "inc"; sel.value = "inc"; refreshTotals(); }
-    else if (sel.value !== mode) { sel.value = mode; }
+    // Default view stays "To do"; the vacant/focus list is opt-in from the dropdown. Keep the dropdown synced to the real filter.
+    if (!n && mode === "focus") { mode = "inc"; refreshTotals(); }
+    if (sel.value !== mode) sel.value = mode;
   }
   document.getElementById("focusApply").addEventListener("click", function () {
     var label = document.getElementById("focusLabel").value.trim();
@@ -848,6 +874,7 @@
   // ---- Export ----
   function tvShort(label) { return label.replace(/ TV matches guest$/, "").replace(/ matches guest$/, ""); }
   function ynStr(v) { return v === "yes" ? "Yes" : v === "no" ? "No" : ""; }
+  function dispStr(e) { if (!e) return ""; if (e.display === "welcome") return "Welcome"; if (e.display === "guest") return "Guest"; if (e.display === "name") return "Name"; if (e.match === "yes") return "Match (legacy)"; if (e.match === "no") return "No-match (legacy)"; return ""; }
   var ISSUE_LABEL = { relabel: "not relabeled", fw: "firmware not verified", linear: "live linear not working", tv: "TV mismatch" };
   function issueText(id) { return issuesOf(id).map(function (c) { return ISSUE_LABEL[c]; }).join(", "); }
   function buildExport() {
@@ -895,17 +922,18 @@
   document.getElementById("expXlsx").addEventListener("click", function () {
     try {
       var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Live linear?"];
-      CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " match"); headers.push(tc.label + " name shown"); });
-      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status");
+      CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " shows"); headers.push(tc.label + " name"); });
+      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (local time)");
       var rows = [];
       ROOMS.forEach(function (id) {
         var s = roomState(id), rm = roomDef(id);
         var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.linear)];
-        CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(ynStr(e.match)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
+        CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(dispStr(e)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
         row.push(data.fw[id] ? "Yes" : "");
         row.push((s.commentText || "").trim());
         row.push(issueText(id));
         row.push(roomDone(id) ? (issuesOf(id).length ? "Complete — issues" : "Complete") : "Incomplete");
+        row.push(s.doneAt ? new Date(s.doneAt).toLocaleString() : "");
         rows.push(row);
       });
       var blob = makeXlsx(headers, rows);
@@ -1046,11 +1074,11 @@
     var el = roomEls[id].card, s = roomState(id);
     el.querySelectorAll(".check.q").forEach(function (row) { setYn(row, s[row.getAttribute("data-field")]); });
     el.querySelectorAll(".check.tv").forEach(function (row) {
-      var key = row.getAttribute("data-field"), e = s.tv[key] || { match: "", name: "" };
-      setYn(row, e.match);
+      var key = row.getAttribute("data-field"), e = s.tv[key] || { display: "", name: "" }, d = e.display || "";
+      row.querySelectorAll(".disp-btn").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-dval") === d); });
       var mm = row.nextElementSibling, inp = mm && mm.querySelector("input[data-tvname]");
       if (inp && document.activeElement !== inp) inp.value = e.name || "";
-      row.classList.toggle("show-name", e.match === "no");
+      row.classList.toggle("show-name", d === "name");
     });
     var crow = el.querySelector(".check.comment");
     if (crow) {
