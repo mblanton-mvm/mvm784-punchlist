@@ -185,7 +185,7 @@
   .ex-wrap { display: flex; gap: 8px; width: 100%; }
   .ex { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ex > span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
-  .ex > input { width: 100%; height: 42px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); padding: 0 10px; font-size: 15px; font-weight: 600; }
+  .check.extras .ex > input { position: static; opacity: 1; pointer-events: auto; width: 100%; height: 44px; border-radius: 9px; border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink); padding: 0 10px; font-size: 16px; font-weight: 600; }
   .comment-field { padding: 2px 14px 12px 14px; display: none; }
   .check.comment.show-c + .comment-field { display: block; }
   .comment-field label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
@@ -364,7 +364,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785244141";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785244559";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
