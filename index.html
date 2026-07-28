@@ -364,7 +364,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785244559";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785244921";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -565,7 +565,7 @@
   function extrasRow(id) {
     var s = roomState(id), ex = s.extra || {};
     var flds = CONFIG.extraInputs.map(function (f) {
-      return '<label class="ex"><span>' + esc(f.label) + '</span><input type="text" inputmode="decimal" data-r="' + esc(id) + '" data-extra="' + f.key + '" value="' + esc(ex[f.key] || "") + '" autocomplete="off"></label>';
+      return '<label class="ex"><span>' + esc(f.label) + '</span><input type="number" step="any" data-r="' + esc(id) + '" data-extra="' + f.key + '" value="' + esc(ex[f.key] || "") + '" autocomplete="off"></label>';
     }).join("");
     return '<div class="check extras"><div class="ex-wrap">' + flds + '</div></div>';
   }
