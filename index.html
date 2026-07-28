@@ -407,7 +407,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785248201";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785280964";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -988,7 +988,7 @@
       var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Use Device MAC?", "Live linear?"];
       CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " shows"); headers.push(tc.label + " name"); });
       (CONFIG.extraInputs || []).forEach(function (f) { headers.push(f.label); });
-      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (local time)");
+      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (Vegas time)");
       var rows = [];
       ROOMS.forEach(function (id) {
         var s = roomState(id), rm = roomDef(id);
@@ -999,7 +999,7 @@
         row.push((s.commentText || "").trim());
         row.push(issueText(id));
         row.push(roomDone(id) ? (issuesOf(id).length ? "Complete — issues" : "Complete") : "Incomplete");
-        row.push(s.doneAt ? new Date(s.doneAt).toLocaleString() : "");
+        row.push(s.doneAt ? new Date(s.doneAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "");
         rows.push(row);
       });
       var blob = makeXlsx(headers, rows);
