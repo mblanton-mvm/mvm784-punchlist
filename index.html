@@ -351,7 +351,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785087245";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785239963";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -630,6 +630,8 @@
 
   // ---- Rendering ----
   function rosterName(id) { return data.roster[id] || ""; }
+  // Masked initials for the on-phone name hint — the full guest name is NEVER stored or synced (privacy)
+  function initials(name) { var w = String(name).trim().split(/\s+/).filter(Boolean); return w.length ? w.map(function (x) { return x.charAt(0).toUpperCase(); }).join(".") + "." : ""; }
   function guestName(id) { var s = data.rooms[id]; if (s && s.guestLocked != null) return s.guestLocked; return rosterName(id); }
   function updateRoom(id) {
     var el = roomEls[id], s = roomState(id), g = guestName(id), locked = s.guestLocked != null;
@@ -752,9 +754,11 @@
     var unknown = [], changed = [];
     Object.keys(map).forEach(function (k) {
       var raw = String(k).trim(); if (!raw) return;
-      var t = normToken(k), ids = t ? resolveToken(t) : [], name = String(map[k]);
-      if (ids.length) ids.forEach(function (id) { data.roster[id] = name; changed.push(id); }); // plain room # → every unit (1106 → 1106A + 1106B)
-      else unknown.push(raw);
+      var t = normToken(k), ids = t ? resolveToken(t) : [], name = String(map[k]).trim();
+      if (!ids.length) { unknown.push(raw); return; }
+      if (name === "~~~") return;                                   // tilde hold — leave ~~~ rooms untouched (pending numbers)
+      var hint = name === "" ? "" : initials(name);                 // store ONLY masked initials; the real name never leaves this device
+      ids.forEach(function (id) { data.roster[id] = hint; lastRosterEdit[id] = Date.now(); changed.push(id); }); // plain room # → every unit (1106 → 1106A + 1106B)
     });
     var known = changed.length;
     ROOMS.forEach(updateRoom); persist(); pushRoster(changed);
@@ -774,7 +778,7 @@
   document.getElementById("rosterClear").addEventListener("click", function () {
     if (!confirm("Clear ALL guest names for EVERYONE on this list? Check-offs are kept.")) return;
     var ids = Object.keys(data.roster);
-    data.roster = {}; ROOMS.forEach(updateRoom); persist(); pushRoster(ids); rmsg("All names cleared.", true);
+    ids.forEach(function (id) { lastRosterEdit[id] = Date.now(); }); data.roster = {}; ROOMS.forEach(updateRoom); persist(); pushRoster(ids); rmsg("All names cleared.", true);
   });
   function rmsg(t, ok) { rosterMsg.textContent = t; rosterMsg.className = "msg " + (ok ? "ok" : "bad"); }
 
@@ -990,7 +994,7 @@
 
   // ---- Supabase real-time sync ----
   var PROP = CONFIG.propId;
-  var sb = null, pending = new Set(), lastLocalEdit = {}, pushTimers = {};
+  var sb = null, pending = new Set(), lastLocalEdit = {}, pushTimers = {}, lastRosterEdit = {};
   try { (JSON.parse(rawGet(KEY + "_pending")) || []).forEach(function (id) { pending.add(id); }); } catch (e) {}
   function persistPending() { rawSet(KEY + "_pending", JSON.stringify(Array.from(pending))); }
 
@@ -1031,6 +1035,7 @@
     refreshTotals();
   }
   function applyServerRoster(id, name) {
+    if (Date.now() - (lastRosterEdit[id] || 0) < 4000) return;
     data.roster[id] = name; queueSave();
     if (roomEls[id]) updateRoom(id);
     refreshTotals();
@@ -1086,7 +1091,7 @@
     fetchAll("punch_roster", "room_id,name", function (rows, err) {
       if (err) return;
       var changed = [];
-      rows.forEach(function (row) { if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
+      rows.forEach(function (row) { if (Date.now() - (lastRosterEdit[row.room_id] || 0) < 4000) return; if (data.roster[row.room_id] !== row.name) { data.roster[row.room_id] = row.name; changed.push(row.room_id); } });
       if (changed.length) { queueSave(); changed.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals(); }
     });
     pullFw(); pullFocus();
@@ -1142,7 +1147,7 @@
     });
     fetchAll("punch_roster", "room_id,name", function (rows, err) {
       if (err) return;
-      rows.forEach(function (row) { data.roster[row.room_id] = row.name; });
+      rows.forEach(function (row) { if (Date.now() - (lastRosterEdit[row.room_id] || 0) < 4000) return; data.roster[row.room_id] = row.name; });
       queueSave(); ROOMS.forEach(function (id) { if (roomEls[id]) updateRoom(id); }); refreshTotals();
     });
     pullFw(); pullFocus();
