@@ -407,7 +407,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785281355";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785281768";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -990,7 +990,7 @@
       headers.push("Displays match?");
       (CONFIG.extraInputs || []).forEach(function (f) { headers.push(f.label); });
       headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (Vegas time)");
-      var rows = [], redSet = new Set(), tvN = CONFIG.tvColumns.length, matchCol = 7 + 2 * tvN;
+      var rows = [], redMap = new Map(), tvN = CONFIG.tvColumns.length, matchCol = 7 + 2 * tvN;
       ROOMS.forEach(function (id, ri) {
         var s = roomState(id), rm = roomDef(id);
         var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.devmac), ynStr(s.linear)];
@@ -1000,8 +1000,9 @@
           var dv = rm.tvs.map(function (tv) { return dispStr(s.tv[tv.key]); });
           var same = dv.every(function (v) { return v === dv[0]; });
           matchVal = same ? "Yes" : "No";
-          if (!same) { CONFIG.tvColumns.forEach(function (tc, i) { if (s.tv[tc.key]) redSet.add((ri + 1) + "," + (7 + 2 * i)); }); redSet.add((ri + 1) + "," + matchCol); }
+          if (!same) { CONFIG.tvColumns.forEach(function (tc, i) { if (s.tv[tc.key]) redMap.set((ri + 1) + "," + (7 + 2 * i), "1"); }); redMap.set((ri + 1) + "," + matchCol, "1"); }
         }
+        if (s.linear === "no") redMap.set((ri + 1) + ",6", "1");
         row.push(matchVal);
         (CONFIG.extraInputs || []).forEach(function (f) { row.push((s.extra || {})[f.key] || ""); });
         row.push(data.fw[id] ? "Yes" : "");
@@ -1011,7 +1012,7 @@
         row.push(s.doneAt ? new Date(s.doneAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "");
         rows.push(row);
       });
-      var blob = makeXlsx(headers, rows, redSet);
+      var blob = makeXlsx(headers, rows, redMap);
       var url = URL.createObjectURL(blob), a = document.createElement("a");
       var d = new Date(), stamp = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
       var tag = (data.prop || "punchlist").replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
@@ -1038,7 +1039,7 @@
     var out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'];
     for (var r = 0; r < all.length; r++) {
       out.push('<row r="' + (r + 1) + '">');
-      for (var c = 0; c < all[r].length; c++) out.push('<c r="' + colRef(c) + (r + 1) + '"' + (red && red.has(r + "," + c) ? ' s="1"' : '') + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(all[r][c]) + '</t></is></c>');
+      for (var c = 0; c < all[r].length; c++) out.push('<c r="' + colRef(c) + (r + 1) + '"' + (red && red.get(r + "," + c) ? ' s="' + red.get(r + "," + c) + '"' : '') + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(all[r][c]) + '</t></is></c>');
       out.push('</row>');
     }
     out.push('</sheetData></worksheet>');
