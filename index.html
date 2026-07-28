@@ -237,6 +237,48 @@
   .danger { color: var(--flag); border-color: var(--flag) !important; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* ---- Compact mode: fit a full room on one mobile screen ---- */
+  :root { --tap: 44px; }
+  .app { font-size: 14.5px; padding-bottom: 78px; }
+  .bar-inner { padding: 7px 12px 8px; }
+  .titlerow h1 { font-size: 15px; }
+  .titlerow h1 .prop { font-size: 10px; margin-top: 1px; }
+  .iconbtn { width: 34px; height: 34px; font-size: 15px; }
+  .progress-wrap { margin-top: 7px; }
+  .progress-top { margin-bottom: 4px; }
+  .track { height: 6px; }
+  .tools { margin-top: 7px; }
+  .search input { height: 40px; font-size: 15px; }
+  .seg button { height: 32px; }
+  main { padding: 9px 10px 0; }
+  .floor { margin-bottom: 9px; }
+  .floor-head { padding: 10px 12px; }
+  .floor-head .fname { font-size: 14.5px; }
+  .floor-body { gap: 7px; padding-top: 7px; }
+  .card { border-radius: 12px; }
+  .card-head { padding: 8px 12px 8px 13px; gap: 10px; }
+  .room-no { font-size: 19px; }
+  .guest .lbl { font-size: 9.5px; }
+  .guest .name { font-size: 13.5px; }
+  .badge, .fwchip { font-size: 9px; padding: 3px 6px; }
+  .check { min-height: 44px; padding: 0 12px; gap: 10px; }
+  .check .ctext { font-size: 14px; }
+  .check .ctext small { font-size: 10.5px; margin-top: 0; }
+  .yn-btn { height: 33px; min-width: 46px; font-size: 13px; padding: 0 11px; }
+  .check.tv { gap: 6px; padding-top: 7px; padding-bottom: 7px; }
+  .disp-btn { height: 36px; font-size: 13px; }
+  .mismatch { padding: 0 12px 8px 12px; }
+  .mismatch label { margin-bottom: 4px; font-size: 10.5px; }
+  .mismatch input { height: 40px; font-size: 15px; }
+  .check.extras { padding: 7px 12px; }
+  .ex-wrap { gap: 7px; }
+  .ex { gap: 3px; }
+  .ex > span { font-size: 9.5px; }
+  .check.extras .ex > input { height: 38px; font-size: 15px; }
+  .comment-field { padding: 0 12px 8px 12px; }
+  .comment-field textarea { min-height: 46px; }
+  footer.bar { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+  .fbtn { height: 44px; font-size: 13.5px; }
 </style>
 
 <div class="app">
@@ -364,7 +406,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785244921";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785245376";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
