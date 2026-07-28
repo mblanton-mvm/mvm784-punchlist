@@ -305,6 +305,7 @@
           <option value="done">Completed</option>
           <option value="norelabel">⚠ Not relabeled</option>
           <option value="nofw">⚠ FW not verified</option>
+          <option value="nodevmac">⚠ Device MAC not set</option>
           <option value="nolinear">⚠ Linear not working</option>
           <option value="notv">📺 Name shown on a TV</option>
           <option value="fwneeded">🔧 M2 FW update needed</option>
@@ -406,7 +407,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785245376";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785248201";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -504,7 +505,7 @@
 
   // Each question is a Yes/No toggle: value "" (unanswered) | "yes" | "no". A room is DONE when every
   // question has an answer (Yes OR No). A "No" answer flags an issue (surfaced in filters + badge + export).
-  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: "", name: "" }; }); return { relabel: "", fw: "", linear: "", tv: t, commentChoice: "", commentText: "", guestLocked: null }; }
+  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: "", name: "" }; }); return { relabel: "", fw: "", devmac: "", linear: "", tv: t, commentChoice: "", commentText: "", guestLocked: null }; }
   function roomState(id) {
     var rm = roomDef(id);
     if (!data.rooms[id]) data.rooms[id] = blankRoom(rm);
@@ -527,12 +528,13 @@
   }
   function tvAnswered(e) { if (!e) return false; if (e.display === "welcome" || e.display === "guest") return true; if (e.display === "name") return (e.name || "").trim() !== ""; return e.match === "yes" || e.match === "no"; }
   function commentAnswered(s) { return s.commentChoice === "no" || (s.commentChoice === "yes" && (s.commentText || "").trim() !== ""); }
-  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.linear)) return false; if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvAnswered(s.tv[tv.key]); }); }
-  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display || e.match || (e.name || "").trim() !== ""; }); }
+  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.devmac && s.linear)) return false; if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvAnswered(s.tv[tv.key]); }); }
+  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.devmac || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display || e.match || (e.name || "").trim() !== ""; }); }
   function issuesOf(id) {
     var s = roomState(id), rm = roomDef(id), out = [];
     if (s.relabel === "no") out.push("relabel");
     if (s.fw === "no") out.push("fw");
+    if (s.devmac === "no") out.push("devmac");
     if (s.linear === "no") out.push("linear");
     if (rm.tvs.some(function (tv) { return s.tv[tv.key].match === "no"; })) out.push("tv");
     return out;
@@ -629,6 +631,7 @@
       card.setAttribute("data-room", id);
       var checksHtml = qRow(id, "relabel", "Boxes labeled w/ @B or @L", "") +
         qRow(id, "fw", "Firmware verified " + CONFIG.firmware, "") +
+        qRow(id, "devmac", "Use Device MAC", "") +
         qRow(id, "linear", "Live linear content works", "");
       rm.tvs.forEach(function (tv) { checksHtml += tvRow(id, tv); });
       if (CONFIG.extraInputs && CONFIG.extraInputs.length) checksHtml += extrasRow(id);
@@ -730,7 +733,7 @@
     el.card.setAttribute("data-status", st);
     if (st === "done") { el.badge.hidden = false; el.badge.className = "badge done"; el.badge.textContent = "Done"; }
     else if (st === "issue") {
-      var codes = issuesOf(id).map(function (c) { return ({ relabel: "Relabel", fw: "FW", linear: "Linear", tv: "TV" })[c]; });
+      var codes = issuesOf(id).map(function (c) { return ({ relabel: "Relabel", fw: "FW", devmac: "MAC", linear: "Linear", tv: "TV" })[c]; });
       el.badge.hidden = false; el.badge.className = "badge flag"; el.badge.textContent = "⚠ " + codes.join(", ");
     } else { el.badge.hidden = true; }
   }
@@ -761,6 +764,7 @@
       case "done": return roomDone(id);
       case "norelabel": return roomDone(id) && s.relabel === "no";
       case "nofw": return roomDone(id) && s.fw === "no";
+      case "nodevmac": return roomDone(id) && s.devmac === "no";
       case "nolinear": return roomDone(id) && s.linear === "no";
       case "notv": return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display === "name" || e.match === "no"; });
       case "fwneeded": return !!data.fw[id];
@@ -935,7 +939,7 @@
   function tvShort(label) { return label.replace(/ TV matches guest$/, "").replace(/ matches guest$/, ""); }
   function ynStr(v) { return v === "yes" ? "Yes" : v === "no" ? "No" : ""; }
   function dispStr(e) { if (!e) return ""; if (e.display === "welcome") return "Welcome"; if (e.display === "guest") return "Guest"; if (e.display === "name") return "Name"; if (e.match === "yes") return "Match (legacy)"; if (e.match === "no") return "No-match (legacy)"; return ""; }
-  var ISSUE_LABEL = { relabel: "not relabeled", fw: "firmware not verified", linear: "live linear not working", tv: "TV mismatch" };
+  var ISSUE_LABEL = { relabel: "not relabeled", fw: "firmware not verified", devmac: "device MAC not set", linear: "live linear not working", tv: "TV mismatch" };
   function issueText(id) { return issuesOf(id).map(function (c) { return ISSUE_LABEL[c]; }).join(", "); }
   function buildExport() {
     var d = new Date(), stamp = d.toLocaleString(), done = 0, incomplete = [], issues = [], flags = [], comments = [];
@@ -981,14 +985,14 @@
   document.getElementById("expCopyJson").addEventListener("click", function () { copy(document.getElementById("exportOut").getAttribute("data-json"), exportMsg, "Raw data copied."); });
   document.getElementById("expXlsx").addEventListener("click", function () {
     try {
-      var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Live linear?"];
+      var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Use Device MAC?", "Live linear?"];
       CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " shows"); headers.push(tc.label + " name"); });
       (CONFIG.extraInputs || []).forEach(function (f) { headers.push(f.label); });
       headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (local time)");
       var rows = [];
       ROOMS.forEach(function (id) {
         var s = roomState(id), rm = roomDef(id);
-        var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.linear)];
+        var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.devmac), ynStr(s.linear)];
         CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(dispStr(e)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
         (CONFIG.extraInputs || []).forEach(function (f) { row.push((s.extra || {})[f.key] || ""); });
         row.push(data.fw[id] ? "Yes" : "");
