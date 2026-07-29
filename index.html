@@ -287,6 +287,10 @@
   .comment-field textarea { min-height: 46px; }
   footer.bar { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
   .fbtn { height: 44px; font-size: 13.5px; }
+  /* Tighter 3-button toggles (Welcome/Guest/Name + Bedroom/Living/Neither) to save vertical space */
+  .check.tv, .check.picker { gap: 5px; padding-top: 6px; padding-bottom: 6px; }
+  .check.tv .ctext, .check.picker .ctext { font-size: 13px; }
+  .disp-btn, .pk-btn { height: 31px; font-size: 12px; padding: 0 3px; border-radius: 8px; }
 </style>
 
 <div class="app">
@@ -415,7 +419,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785329053";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785329817";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
