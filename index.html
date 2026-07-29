@@ -181,6 +181,14 @@
   .disp-btn[data-dval="welcome"][aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff; }
   .disp-btn[data-dval="guest"][aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .disp-btn[data-dval="name"][aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: #fff; }
+  .check.picker { flex-direction: column; align-items: stretch; gap: 9px; padding-top: 11px; padding-bottom: 11px; }
+  .check.picker .ctext { flex: none; }
+  .pk3 { display: flex; gap: 6px; }
+  .pk-btn { appearance: none; flex: 1; min-width: 0; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); font-size: 13px; font-weight: 700; height: 42px; padding: 0 4px; border-radius: 9px; cursor: pointer; }
+  .pk-btn[data-pv="bed"][aria-pressed="true"], .pk-btn[data-pv="liv"][aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .pk-btn[data-pv="neither"][aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: #fff; }
+  .picker-sub { display: none; }
+  .picker-sub.show { display: block; }
   .check.extras { display: block; cursor: default; min-height: 0; padding: 11px 14px; }
   .ex-wrap { display: flex; gap: 8px; width: 100%; }
   .ex { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -407,7 +415,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785281768";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785329053";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -430,6 +438,11 @@
     relabelSub: "Both boxes in this unit",
     tvColumns: [{ key: "bed", label: "Bedroom" }, { key: "liv", label: "Living" }],
     extraInputs: [{ key: "low", label: "Low" }, { key: "high", label: "High" }, { key: "mer", label: "MER" }],
+    pickers: [
+      { key: "ltv", label: "Live TV Worked When Entering", sub: { key: "boxReset", label: "Box Reset, Verified Live TV Works", showWhen: "neither" } },
+      { key: "qr", label: "Casting QR Code Displays" }
+    ],
+    noLinear: true,
     makeRooms: function () {
       var RAW = "101A 101B 102A 102B 103A 103B 104A 104B 105A 105B 201A 201B 202A 202B 203A 203B 204A 204B 205A 205B 206A 206B 207A 207B 208A 208B 209A 209B 210A 210B 211A 211B 212A 212B 301A 301B 301S 302A 302B 303A 303B 304A 304B 305A 305B 306A 306B 307A 307B 308A 308B 309A 309B 310A 310B 311A 311B 312A 312B 401A 401B 401S 402A 402B 403A 403B 404A 404B 405A 405B 406A 406B 407A 407B 408A 408B 409A 409B 410A 410B 411A 411B 412A 412B 501A 501B 501S 502A 502B 503A 503B 504A 504B 505A 505B 506A 506B 507A 507B 508A 508B 509A 509B 510A 510B 511A 511B 512A 512B 601A 601B 601S 602A 602B 603A 603B 604A 604B 605A 605B 606A 606B 607A 607B 608A 608B 609A 609B 610A 610B 611A 611B 612A 612B 701A 701B 701S 702A 702B 703A 703B 704A 704B 705A 705B 706A 706B 707A 707B 708A 708B 709A 709B 710A 710B 711A 711B 712A 712B 801A 801B 801S 802A 802B 803A 803B 804A 804B 805A 805B 806A 806B 807A 807B 808A 808B 809A 809B 810A 810B 811A 811B 812A 812B 901A 901B 901S 902A 902B 903A 903B 904A 904B 905A 905B 906A 906B 907A 907B 908A 908B 909A 909B 910A 910B 911A 911B 912A 912B 1001A 1001B 1001S 1002A 1002B 1003A 1003B 1004A 1004B 1005A 1005B 1006A 1006B 1007A 1007B 1008A 1008B 1009A 1009B 1010A 1010B 1011A 1011B 1012A 1012B 1101A 1101B 1101S 1102A 1102B 1103A 1103B 1104A 1104B 1105A 1105B 1106A 1106B 1107A 1107B 1108A 1108B 1109A 1109B 1110A 1110B 1111A 1111B 1112A 1112B 1201A 1201B 1201S 1202A 1202B 1203A 1203B 1204A 1204B 1205A 1205B 1206A 1206B 1207A 1207B 1208A 1208B 1209A 1209B 1210A 1210B 1211A 1211B 1212A 1212B 1401A 1401B 1401S 1402A 1402B 1403A 1403B 1404A 1404B 1405A 1405B 1406A 1406B 1407A 1407B 1408A 1408B 1409A 1409B 1410A 1410B 1411A 1411B 1412A 1412B 1501A 1501B 1501S 1502A 1502B 1503A 1503B 1504A 1504B 1505A 1505B 1506A 1506B 1507A 1507B 1508A 1508B 1509A 1509B 1510A 1510B 1511A 1511B 1512A 1512B 1601A 1601B 1601S 1602A 1602B 1603A 1603B 1604A 1604B 1605A 1605B 1606A 1606B 1607A 1607B 1608A 1608B 1609A 1609B 1610A 1610B 1611A 1611B 1612A 1612B 1701A 1701B 1702A 1702B 1703A 1703B 1704A 1704B 1705A 1705B 1706A 1706B 1707A 1707B 1708A 1708B 1709A 1709B 1710A 1710B 1711A 1711B 1712A 1712B 1807A 1807B 1808A 1808B 1809A 1809B 1810A 1810B 1811A 1811B 1812A 1812B";
       return RAW.trim().split(/\s+/).map(function (tok) {
@@ -505,7 +518,7 @@
 
   // Each question is a Yes/No toggle: value "" (unanswered) | "yes" | "no". A room is DONE when every
   // question has an answer (Yes OR No). A "No" answer flags an issue (surfaced in filters + badge + export).
-  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: "", name: "" }; }); return { relabel: "", fw: "", devmac: "", linear: "", tv: t, commentChoice: "", commentText: "", guestLocked: null }; }
+  function blankRoom(rm) { var t = {}; rm.tvs.forEach(function (tv) { t[tv.key] = { match: "", name: "" }; }); return { relabel: "", fw: "", devmac: "", linear: "", tv: t, picks: {}, commentChoice: "", commentText: "", guestLocked: null }; }
   function roomState(id) {
     var rm = roomDef(id);
     if (!data.rooms[id]) data.rooms[id] = blankRoom(rm);
@@ -528,8 +541,8 @@
   }
   function tvAnswered(e) { if (!e) return false; if (e.display === "welcome" || e.display === "guest") return true; if (e.display === "name") return (e.name || "").trim() !== ""; return e.match === "yes" || e.match === "no"; }
   function commentAnswered(s) { return s.commentChoice === "no" || (s.commentChoice === "yes" && (s.commentText || "").trim() !== ""); }
-  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.devmac && s.linear)) return false; if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvAnswered(s.tv[tv.key]); }); }
-  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.devmac || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display || e.match || (e.name || "").trim() !== ""; }); }
+  function roomDone(id) { var s = roomState(id), rm = roomDef(id); if (!(s.relabel && s.fw && s.devmac)) return false; if (!CONFIG.noLinear && !s.linear) return false; if (CONFIG.pickers) { for (var pi = 0; pi < CONFIG.pickers.length; pi++) if (!pickerAnswered(s, CONFIG.pickers[pi])) return false; } if (!commentAnswered(s)) return false; return rm.tvs.every(function (tv) { return tvAnswered(s.tv[tv.key]); }); }
+  function roomTouched(id) { var s = roomState(id), rm = roomDef(id); if (s.relabel || s.fw || s.devmac || s.linear || s.commentChoice || (s.commentText || "").trim() !== "") return true; if (CONFIG.pickers && CONFIG.pickers.some(function (p) { var pk = (s.picks || {})[p.key]; return pk && (pk.bed || pk.liv || pk.neither); })) return true; return rm.tvs.some(function (tv) { var e = s.tv[tv.key]; return e.display || e.match || (e.name || "").trim() !== ""; }); }
   function issuesOf(id) {
     var s = roomState(id), rm = roomDef(id), out = [];
     if (s.relabel === "no") out.push("relabel");
@@ -632,7 +645,8 @@
       var checksHtml = qRow(id, "relabel", "Boxes labeled w/ @B or @L", "") +
         qRow(id, "fw", "Firmware verified " + CONFIG.firmware, "") +
         qRow(id, "devmac", "Use Device MAC", "") +
-        qRow(id, "linear", "Live linear content works", "");
+        (CONFIG.noLinear ? "" : qRow(id, "linear", "Live linear content works", ""));
+      (CONFIG.pickers || []).forEach(function (p) { checksHtml += pickerRow(id, p); });
       rm.tvs.forEach(function (tv) { checksHtml += tvRow(id, tv); });
       if (CONFIG.extraInputs && CONFIG.extraInputs.length) checksHtml += extrasRow(id);
       checksHtml += commentRow(id);
@@ -657,8 +671,32 @@
     });
   });
 
+  function pickStr(pk) { if (!pk) return ""; if (pk.neither) return "Neither"; var a = []; if (pk.bed) a.push("Bedroom"); if (pk.liv) a.push("Living Room"); return a.join(", "); }
+  function pickerAnswered(s, p) { var pk = (s.picks || {})[p.key]; if (!pk || !(pk.bed || pk.liv || pk.neither)) return false; if (p.sub && p.sub.showWhen === "neither" && pk.neither) { var v = s[p.sub.key]; return v === "yes" || v === "no"; } return true; }
+  function pickerRow(id, p) {
+    var pk = (roomState(id).picks || {})[p.key] || {};
+    var opts = [["bed", "Bedroom"], ["liv", "Living Room"], ["neither", "Neither"]];
+    var pills = opts.map(function (o) { return '<button type="button" class="pk-btn" data-pv="' + o[0] + '" aria-pressed="' + (!!pk[o[0]]) + '">' + o[1] + '</button>'; }).join("");
+    var html = '<div class="check picker" data-r="' + esc(id) + '" data-pk="' + p.key + '"><span class="ctext">' + esc(p.label) + '</span><div class="pk3">' + pills + '</div></div>';
+    if (p.sub) { var sv = roomState(id)[p.sub.key] || ""; html += '<div class="picker-sub' + (pk.neither ? " show" : "") + '"><div class="check q" data-r="' + esc(id) + '" data-field="' + p.sub.key + '"><span class="ctext">' + esc(p.sub.label) + '</span>' + ynHtml(sv) + '</div></div>'; }
+    return html;
+  }
   // ---- Events ----
   listEl.addEventListener("click", function (e) {
+    var pb = e.target.closest(".pk-btn");
+    if (pb) {
+      var prow = pb.closest(".check.picker"), pid = prow.getAttribute("data-r"), pkey = prow.getAttribute("data-pk"), pv = pb.getAttribute("data-pv");
+      var ps = roomState(pid); if (!ps.picks) ps.picks = {}; if (!ps.picks[pkey]) ps.picks[pkey] = { bed: false, liv: false, neither: false };
+      var PK = ps.picks[pkey];
+      if (pv === "neither") { PK.neither = !PK.neither; if (PK.neither) { PK.bed = false; PK.liv = false; } }
+      else { PK[pv] = !PK[pv]; if (PK[pv]) PK.neither = false; }
+      prow.querySelectorAll(".pk-btn").forEach(function (b) { b.setAttribute("aria-pressed", !!PK[b.getAttribute("data-pv")]); });
+      var sub = prow.nextElementSibling && prow.nextElementSibling.classList.contains("picker-sub") ? prow.nextElementSibling : null;
+      if (sub) sub.classList.toggle("show", !!PK.neither);
+      lockIfDone(pid); updateRoom(pid); queueSave(); schedulePush(pid); refreshTotals();
+      if (roomDone(pid)) setTimeout(function () { roomEls[pid].card.classList.add("collapsed"); }, 220);
+      return;
+    }
     var db = e.target.closest(".disp-btn");
     if (db) {
       var trow = db.closest(".check.tv"), tid = trow.getAttribute("data-r"), tkey = trow.getAttribute("data-field"), dval = db.getAttribute("data-dval");
@@ -985,31 +1023,41 @@
   document.getElementById("expCopyJson").addEventListener("click", function () { copy(document.getElementById("exportOut").getAttribute("data-json"), exportMsg, "Raw data copied."); });
   document.getElementById("expXlsx").addEventListener("click", function () {
     try {
-      var headers = ["Room", "Section", "Guest / check-in", "Relabeled?", "Firmware " + CONFIG.firmware + "?", "Use Device MAC?", "Live linear?"];
-      CONFIG.tvColumns.forEach(function (tc) { headers.push(tc.label + " shows"); headers.push(tc.label + " name"); });
-      headers.push("Displays match?");
-      (CONFIG.extraInputs || []).forEach(function (f) { headers.push(f.label); });
-      headers.push("M2 FW needed"); headers.push("Comment"); headers.push("Issues"); headers.push("Status"); headers.push("Completed (Vegas time)");
-      var rows = [], redMap = new Map(), tvN = CONFIG.tvColumns.length, matchCol = 7 + 2 * tvN;
+      var cols = [];
+      cols.push({ h: "Room", v: function (id, s, rm) { return rm.roomNo; } });
+      cols.push({ h: "Section", v: function (id, s, rm) { return rm.sectionLabel; } });
+      cols.push({ h: "Guest / check-in", v: function (id) { return guestName(id) || ""; } });
+      cols.push({ h: "Relabeled?", v: function (id, s) { return ynStr(s.relabel); } });
+      cols.push({ h: "Firmware " + CONFIG.firmware + "?", v: function (id, s) { return ynStr(s.fw); } });
+      cols.push({ h: "Use Device MAC?", v: function (id, s) { return ynStr(s.devmac); } });
+      if (!CONFIG.noLinear) cols.push({ h: "Live linear?", v: function (id, s) { return ynStr(s.linear); }, red: function (id, s) { return s.linear === "no" ? "1" : null; } });
+      (CONFIG.pickers || []).forEach(function (p) {
+        cols.push({ h: p.label, v: function (id, s) { return pickStr((s.picks || {})[p.key]); } });
+        if (p.sub) cols.push({ h: p.sub.label, v: function (id, s) { return ynStr(s[p.sub.key]); } });
+      });
+      CONFIG.tvColumns.forEach(function (tc) {
+        cols.push({ h: tc.label + " shows", v: function (id, s) { var e = s.tv[tc.key]; return e ? dispStr(e) : "n/a"; }, tvKey: tc.key });
+        cols.push({ h: tc.label + " name", v: function (id, s) { var e = s.tv[tc.key]; return e ? (e.name || "").trim() : ""; } });
+      });
+      cols.push({ h: "Displays match?", isMatch: true });
+      (CONFIG.extraInputs || []).forEach(function (f) { cols.push({ h: f.label, v: function (id, s) { return (s.extra || {})[f.key] || ""; } }); });
+      cols.push({ h: "M2 FW needed", v: function (id) { return data.fw[id] ? "Yes" : ""; } });
+      cols.push({ h: "Comment", v: function (id, s) { return (s.commentText || "").trim(); } });
+      cols.push({ h: "Issues", v: function (id) { return issueText(id); } });
+      cols.push({ h: "Status", v: function (id) { return roomDone(id) ? (issuesOf(id).length ? "Complete — issues" : "Complete") : "Incomplete"; } });
+      cols.push({ h: "Completed (Vegas time)", v: function (id, s) { return s.doneAt ? new Date(s.doneAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : ""; } });
+      var headers = cols.map(function (c) { return c.h; });
+      var rows = [], redMap = new Map();
       ROOMS.forEach(function (id, ri) {
-        var s = roomState(id), rm = roomDef(id);
-        var row = [rm.roomNo, rm.sectionLabel, guestName(id) || "", ynStr(s.relabel), ynStr(s.fw), ynStr(s.devmac), ynStr(s.linear)];
-        CONFIG.tvColumns.forEach(function (tc) { var e = s.tv[tc.key]; if (e) { row.push(dispStr(e)); row.push((e.name || "").trim()); } else { row.push("n/a"); row.push(""); } });
-        var matchVal = "";
-        if (roomDone(id)) {
-          var dv = rm.tvs.map(function (tv) { return dispStr(s.tv[tv.key]); });
-          var same = dv.every(function (v) { return v === dv[0]; });
-          matchVal = same ? "Yes" : "No";
-          if (!same) { CONFIG.tvColumns.forEach(function (tc, i) { if (s.tv[tc.key]) redMap.set((ri + 1) + "," + (7 + 2 * i), "1"); }); redMap.set((ri + 1) + "," + matchCol, "1"); }
-        }
-        if (s.linear === "no") redMap.set((ri + 1) + ",6", "1");
-        row.push(matchVal);
-        (CONFIG.extraInputs || []).forEach(function (f) { row.push((s.extra || {})[f.key] || ""); });
-        row.push(data.fw[id] ? "Yes" : "");
-        row.push((s.commentText || "").trim());
-        row.push(issueText(id));
-        row.push(roomDone(id) ? (issuesOf(id).length ? "Complete — issues" : "Complete") : "Incomplete");
-        row.push(s.doneAt ? new Date(s.doneAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "");
+        var s = roomState(id), rm = roomDef(id), done = roomDone(id);
+        var dv = done ? rm.tvs.map(function (tv) { return dispStr(s.tv[tv.key]); }) : null;
+        var same = dv ? dv.every(function (v) { return v === dv[0]; }) : true;
+        var row = cols.map(function (c) { return c.isMatch ? (done ? (same ? "Yes" : "No") : "") : c.v(id, s, rm); });
+        cols.forEach(function (c, ci) {
+          if (c.red) { var st = c.red(id, s); if (st) redMap.set((ri + 1) + "," + ci, st); }
+          if (c.tvKey && done && !same && s.tv[c.tvKey]) redMap.set((ri + 1) + "," + ci, "1");
+          if (c.isMatch && done && !same) redMap.set((ri + 1) + "," + ci, "1");
+        });
         rows.push(row);
       });
       var blob = makeXlsx(headers, rows, redMap);
@@ -1165,6 +1213,12 @@
       if (ta && document.activeElement !== ta) ta.value = s.commentText || "";
     }
     el.querySelectorAll("input[data-extra]").forEach(function (inp) { var xk = inp.getAttribute("data-extra"); if (document.activeElement !== inp) inp.value = (s.extra || {})[xk] || ""; });
+    el.querySelectorAll(".check.picker").forEach(function (row) {
+      var pkey = row.getAttribute("data-pk"), PK = (s.picks || {})[pkey] || {};
+      row.querySelectorAll(".pk-btn").forEach(function (b) { b.setAttribute("aria-pressed", !!PK[b.getAttribute("data-pv")]); });
+      var sub = row.nextElementSibling && row.nextElementSibling.classList.contains("picker-sub") ? row.nextElementSibling : null;
+      if (sub) sub.classList.toggle("show", !!PK.neither);
+    });
     if (roomDone(id)) el.classList.add("collapsed");
   }
 
