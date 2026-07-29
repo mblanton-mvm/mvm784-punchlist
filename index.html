@@ -419,7 +419,7 @@
 
   var SUPA_URL = "https://zhqyjmugyoqvztqqegis.supabase.co";
   var SUPA_KEY = "sb_publishable_Ehu06hwE9_VJyT_ivtteyg_bmos1qeN";
-  var BUILD_ID = "1785329817";   // bumped every deploy; used for auto-update
+  var BUILD_ID = "1785330554";   // bumped every deploy; used for auto-update
 
   // Auto-update: fetch our own page (cache-busted); if the deployed build changed, reload — unless mid-edit
   function isBusy() { return !!editingRoom || !!document.querySelector(".sheet.open") || !!document.querySelector(".scrim.open"); }
@@ -443,7 +443,7 @@
     tvColumns: [{ key: "bed", label: "Bedroom" }, { key: "liv", label: "Living" }],
     extraInputs: [{ key: "low", label: "Low" }, { key: "high", label: "High" }, { key: "mer", label: "MER" }],
     pickers: [
-      { key: "ltv", label: "Live TV Worked When Entering", sub: { key: "boxReset", label: "Box Reset, Verified Live TV Works", showWhen: "neither" } },
+      { key: "ltv", label: "Live TV Worked When Entering", subs: [{ key: "bedReset", label: "Bedroom box reset, verified TV works", showWhen: "notBed" }, { key: "livReset", label: "Living room box reset, verified TV works", showWhen: "notLiv" }] },
       { key: "qr", label: "Casting QR Code Displays" }
     ],
     noLinear: true,
@@ -676,13 +676,14 @@
   });
 
   function pickStr(pk) { if (!pk) return ""; if (pk.neither) return "Neither"; var a = []; if (pk.bed) a.push("Bedroom"); if (pk.liv) a.push("Living Room"); return a.join(", "); }
-  function pickerAnswered(s, p) { var pk = (s.picks || {})[p.key]; if (!pk || !(pk.bed || pk.liv || pk.neither)) return false; if (p.sub && p.sub.showWhen === "neither" && pk.neither) { var v = s[p.sub.key]; return v === "yes" || v === "no"; } return true; }
+  function subActive(pk, cond) { if (!(pk.bed || pk.liv || pk.neither)) return false; if (cond === "notBed") return !pk.bed; if (cond === "notLiv") return !pk.liv; if (cond === "neither") return !!pk.neither; return false; }
+  function pickerAnswered(s, p) { var pk = (s.picks || {})[p.key]; if (!pk || !(pk.bed || pk.liv || pk.neither)) return false; if (p.subs) { for (var i = 0; i < p.subs.length; i++) { var sb = p.subs[i]; if (subActive(pk, sb.showWhen)) { var v = s[sb.key]; if (!(v === "yes" || v === "no")) return false; } } } return true; }
   function pickerRow(id, p) {
     var pk = (roomState(id).picks || {})[p.key] || {};
     var opts = [["bed", "Bedroom"], ["liv", "Living Room"], ["neither", "Neither"]];
     var pills = opts.map(function (o) { return '<button type="button" class="pk-btn" data-pv="' + o[0] + '" aria-pressed="' + (!!pk[o[0]]) + '">' + o[1] + '</button>'; }).join("");
     var html = '<div class="check picker" data-r="' + esc(id) + '" data-pk="' + p.key + '"><span class="ctext">' + esc(p.label) + '</span><div class="pk3">' + pills + '</div></div>';
-    if (p.sub) { var sv = roomState(id)[p.sub.key] || ""; html += '<div class="picker-sub' + (pk.neither ? " show" : "") + '"><div class="check q" data-r="' + esc(id) + '" data-field="' + p.sub.key + '"><span class="ctext">' + esc(p.sub.label) + '</span>' + ynHtml(sv) + '</div></div>'; }
+    (p.subs || []).forEach(function (sb) { var sv = roomState(id)[sb.key] || ""; html += '<div class="picker-sub' + (subActive(pk, sb.showWhen) ? " show" : "") + '" data-cond="' + sb.showWhen + '"><div class="check q" data-r="' + esc(id) + '" data-field="' + sb.key + '"><span class="ctext">' + esc(sb.label) + '</span>' + ynHtml(sv) + '</div></div>'; });
     return html;
   }
   // ---- Events ----
@@ -695,8 +696,8 @@
       if (pv === "neither") { PK.neither = !PK.neither; if (PK.neither) { PK.bed = false; PK.liv = false; } }
       else { PK[pv] = !PK[pv]; if (PK[pv]) PK.neither = false; }
       prow.querySelectorAll(".pk-btn").forEach(function (b) { b.setAttribute("aria-pressed", !!PK[b.getAttribute("data-pv")]); });
-      var sub = prow.nextElementSibling && prow.nextElementSibling.classList.contains("picker-sub") ? prow.nextElementSibling : null;
-      if (sub) sub.classList.toggle("show", !!PK.neither);
+      var sub = prow.nextElementSibling;
+      while (sub && sub.classList.contains("picker-sub")) { sub.classList.toggle("show", subActive(PK, sub.getAttribute("data-cond"))); sub = sub.nextElementSibling; }
       lockIfDone(pid); updateRoom(pid); queueSave(); schedulePush(pid); refreshTotals();
       if (roomDone(pid)) setTimeout(function () { roomEls[pid].card.classList.add("collapsed"); }, 220);
       return;
@@ -1037,7 +1038,7 @@
       if (!CONFIG.noLinear) cols.push({ h: "Live linear?", v: function (id, s) { return ynStr(s.linear); }, red: function (id, s) { return s.linear === "no" ? "1" : null; } });
       (CONFIG.pickers || []).forEach(function (p) {
         cols.push({ h: p.label, v: function (id, s) { return pickStr((s.picks || {})[p.key]); } });
-        if (p.sub) cols.push({ h: p.sub.label, v: function (id, s) { return ynStr(s[p.sub.key]); } });
+        (p.subs || []).forEach(function (sb) { cols.push({ h: sb.label, v: function (id, s) { var pk = (s.picks || {})[p.key] || {}; if (!(pk.bed || pk.liv || pk.neither)) return ""; var didntWork = sb.showWhen === "notBed" ? !pk.bed : sb.showWhen === "notLiv" ? !pk.liv : !!pk.neither; return didntWork ? ynStr(s[sb.key]) : "Yes"; } }); });
       });
       CONFIG.tvColumns.forEach(function (tc) {
         cols.push({ h: tc.label + " shows", v: function (id, s) { var e = s.tv[tc.key]; return e ? dispStr(e) : "n/a"; }, tvKey: tc.key });
@@ -1220,8 +1221,8 @@
     el.querySelectorAll(".check.picker").forEach(function (row) {
       var pkey = row.getAttribute("data-pk"), PK = (s.picks || {})[pkey] || {};
       row.querySelectorAll(".pk-btn").forEach(function (b) { b.setAttribute("aria-pressed", !!PK[b.getAttribute("data-pv")]); });
-      var sub = row.nextElementSibling && row.nextElementSibling.classList.contains("picker-sub") ? row.nextElementSibling : null;
-      if (sub) sub.classList.toggle("show", !!PK.neither);
+      var sub = row.nextElementSibling;
+      while (sub && sub.classList.contains("picker-sub")) { sub.classList.toggle("show", subActive(PK, sub.getAttribute("data-cond"))); sub = sub.nextElementSibling; }
     });
     if (roomDone(id)) el.classList.add("collapsed");
   }
