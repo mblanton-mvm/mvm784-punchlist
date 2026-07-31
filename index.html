@@ -321,6 +321,22 @@
           <option value="done">Completed</option>
           <option value="notv">📺 Name shown on a TV</option>
           <option value="comment">💬 Has comment</option>
+          <optgroup label="Flag — Verified">
+            <option value="flag:verified">✓ Verified</option>
+          </optgroup>
+          <optgroup label="Flag — Needs Revisit">
+            <option value="flag:rev">⚑ Needs revisit (any)</option>
+            <option value="flag:both_mis">Both mislbl</option>
+            <option value="flag:br_mis">BR mislbl</option>
+            <option value="flag:lr_mis">LR mislbl</option>
+            <option value="flag:br_mis_lr_off">BR bad·LR off</option>
+            <option value="flag:lr_mis_br_off">LR bad·BR off</option>
+            <option value="flag:br_ok_lr_off">BR ok·LR off</option>
+            <option value="flag:lr_ok_br_off">LR ok·BR off</option>
+            <option value="flag:br_ok_lr_rl">BR ok·LR RL</option>
+            <option value="flag:lr_ok_br_rl">LR ok·BR RL</option>
+            <option value="flag:tbd_none">TBD·none</option>
+          </optgroup>
         </select>
       </div>
     </div>
@@ -816,6 +832,7 @@
   var mode = "inc", q = "", userOpen = new Set(), editingRoom = null, userPicked = false;
   function matchesMode(id) {
     var s = roomState(id), rm = roomDef(id);
+    if (mode.indexOf("flag:") === 0) { var _fv = mode.slice(5); return _fv === "rev" ? (FLAGGRP[roomFlag(id)] === "rev") : (roomFlag(id) === _fv); }
     switch (mode) {
       case "all": return true;
       case "done": return roomDone(id);
